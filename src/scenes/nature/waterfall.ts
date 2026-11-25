@@ -389,11 +389,10 @@ class Waterfall extends PixelScene {
     pg.addColorStop(1, L.pool[1])
     c.fillStyle = pg
     c.fillRect(0, bot, w, h - bot)
-    const refl = c.createLinearGradient(0, bot, 0, bot + (h - bot) * 0.6)
-    refl.addColorStop(0, `rgba(${L.mist},0.35)`)
-    refl.addColorStop(1, `rgba(${L.mist},0)`)
-    c.fillStyle = refl
-    c.fillRect(sx0 - G.spread, bot, G.fw + G.spread * 4, (h - bot) * 0.6)
+    // the fall's reflection, soft on every edge
+    c.globalAlpha = 0.5
+    c.drawImage(this.puff, sx0 - G.spread, bot - (h - bot) * 0.25, G.fw + G.spread * 4, (h - bot) * 0.9)
+    c.globalAlpha = 1
     c.strokeStyle = `rgba(${L.mist},0.5)`
     c.lineWidth = Math.max(1, 0.7 * u)
     for (let i = 0; i < 6; i++) {
@@ -413,12 +412,10 @@ class Waterfall extends PixelScene {
       c.ellipse(x, y, (5 + (i % 4) * 2) * u, 2.5 * u, 0, 0, TAU)
       c.fill()
     }
-    // a low band of mist over the pool
-    const band = c.createLinearGradient(0, bot - G.fw * 0.9, 0, bot + 8 * u)
-    band.addColorStop(0, `rgba(${L.mist},0)`)
-    band.addColorStop(1, `rgba(${L.mist},${0.28 * Math.min(1.5, this.num('flow'))})`)
-    c.fillStyle = band
-    c.fillRect(G.cx - G.fw * 1.6, bot - G.fw * 0.9, G.fw * 3.2, G.fw * 0.9 + 8 * u)
+    // a low, soft cloud of mist over the pool (the puff sprite fades on every side)
+    c.globalAlpha = Math.min(0.9, 0.45 * this.num('flow'))
+    c.drawImage(this.puff, G.cx - G.fw * 1.5, bot - G.fw * 0.7, G.fw * 3, G.fw * 1.1)
+    c.globalAlpha = 1
     // mist and spray
     for (const p of this.puffs) {
       const k = p.life / p.max
