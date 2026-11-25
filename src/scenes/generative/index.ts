@@ -213,4 +213,40 @@ export const generativeScenes: SceneEntry[] = [
     ],
     load: () => import('./lSystem'),
   },
+  {
+    meta: {
+      id: 'zen-garden',
+      name: 'Zen Garden',
+      category: 'generative',
+      description: 'A raked sand garden from above: the rake draws lines that bend into rings around the stones, then the wind smooths it all.',
+      version: '1.2.0',
+      render: 'pixel',
+      complexity: 1,
+      audio: ['wind', 'pink'],
+      gary: false,
+      tags: ['zen', 'sand', 'garden', 'japan', 'calm'],
+    },
+    settings: [
+      { key: 'speed', label: 'Raking speed', type: 'range', min: 0.3, max: 3, step: 0.1, default: 1 },
+    ],
+    load: () => import('./zenGarden'),
+  },
+  {
+    meta: {
+      id: 'watchmaker',
+      name: 'Watchmaker',
+      category: 'generative',
+      description: 'A watch movement on the bench: a meshing gear train that ticks, a swinging balance wheel and ruby jewels under the loupe light.',
+      version: '1.2.0',
+      render: 'pixel',
+      complexity: 1,
+      audio: ['brown', 'computer'],
+      gary: false,
+      tags: ['clockwork', 'gears', 'watch', 'mechanism'],
+    },
+    settings: [
+      { key: 'speed', label: 'Beat', type: 'range', min: 0.3, max: 3, step: 0.1, default: 1 },
+    ],
+    load: () => import('./watchmaker'),
+  },
 ]

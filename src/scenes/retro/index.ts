@@ -214,4 +214,22 @@ export const retroScenes: SceneEntry[] = [
     ],
     load: () => import('./popupStorm'),
   },
+  {
+    meta: {
+      id: 'pirate-radio',
+      name: 'Pirate Radio',
+      category: 'retro',
+      description: 'A pirate radio desk at night: RADIO NGMI on air, VU needles bounce, the dial drifts, tape reels turn. Tracks are invented.',
+      version: '1.2.0',
+      render: 'pixel',
+      complexity: 1,
+      audio: ['computer', 'brown'],
+      gary: false,
+      tags: ['radio', 'fm', 'vu meter', 'tape', 'retro'],
+    },
+    settings: [
+
+    ],
+    load: () => import('./pirateRadio'),
+  },
 ]

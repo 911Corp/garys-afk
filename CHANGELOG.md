@@ -2,14 +2,25 @@
 
 ## 1.3.0 (2026-11-25)
 
+75 scenes.
+
 ### Added
+- Ten scenes on new themes: **Mining Farm** (a fictional farm, a green wave when a block is
+  found), **Lost & Found of the Web** (the night desk tags a guestbook, a hit counter, a webring
+  badge...), **Night Market**, **Lighthouse Storm**, **Abyss**, **Sleeper Train**, **Observatory**
+  (star trails around the pole), **Zen Garden** (a rake draws rings around the stones),
+  **Watchmaker** (a meshing gear train, balance wheel, rubies), **Pirate Radio** (RADIO NGMI,
+  VU meters, tape reels; invented tracks).
 - **Little Troop** (Pixel Worlds): a 90s-style puzzle platformer in attract mode with an original
   crew in orange beanies. They drop from a hatch, dig, tunnel, build stairs and bridges, float down
   under umbrellas and head for the lantern door; a new level is carved when the troop is home.
 
 ### Changed
+- **Lo-fi Room** redrawn as original pixel art on a real 256x144 grid, scaled without smoothing:
+  an attic studio at night with a rainy skylight, fairy lights, a CRT and a desk lamp, hanging
+  plants, a record spinning and a dog asleep in its basket.
 - **Waterfall** rebuilt: a great fall through a notch in a towering cliff, seen from the plunge
-  pool, with rolling mist, light shafts, vines, birds and jungle fronds framing the view.
+  pool, with rolling mist, light shafts, vines, birds (no rainbow) and jungle fronds framing the view.
   New **Light** setting: day, golden hour, moonlight. Every element is placed from one geometry.
 - **Pop-up Storm** redrawn the old-desktop way: pixel-art desktop icons (computer, recycle bin,
   folder, text file, app), bevelled windows and buttons with a focus ring, the classic message

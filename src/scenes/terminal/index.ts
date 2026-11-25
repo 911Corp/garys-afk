@@ -236,4 +236,22 @@ export const terminalScenes: SceneEntry[] = [
     ],
     load: () => import('./chatRoom'),
   },
+  {
+    meta: {
+      id: 'mining-farm',
+      name: 'Mining Farm',
+      category: 'terminal',
+      description: 'A mining farm at night: racks of rigs, fans spinning, LEDs blinking, and a green wave through the room when a block is found. Fictional farm.',
+      version: '1.2.0',
+      render: 'pixel',
+      complexity: 1,
+      audio: ['computer', 'brown'],
+      gary: false,
+      tags: ['mining', 'rigs', 'crypto', 'fans', 'servers'],
+    },
+    settings: [
+      { key: 'speed', label: 'Block speed', type: 'range', min: 0.3, max: 3, step: 0.1, default: 1 },
+    ],
+    load: () => import('./miningFarm'),
+  },
 ]

@@ -13,18 +13,18 @@ Free. No account, no ads, no wallet, no tracking, no server. Everything stays in
 
 ## What's inside
 
-65 animated scenes in 8 categories, each with its own renderer and settings:
+75 animated scenes in 8 categories, each with its own renderer and settings:
 
 | Category | Scenes |
 | --- | --- |
-| After Hours | Gary.exe · The Trenches · Lo-fi Room · Friday Deploy · Jarvis Core · Merge Conflict · 3AM Commit · Anomaly Archive |
-| Terminal & Hacker | Terminal 404 · Digital Rain · Mainframe · Packet Flow · Whale Radar · Purity Scanner · Dial-Up 56k · Chat Room 1999 |
-| Cozy & Relax | Fireplace · Rainy Night · Snow Cabin · Aquarium · Lava Lamp · Koi Pond · Bonsai Seasons · Laundromat |
-| Space & Cosmos | Starfield · Black Hole · Solar System · Nebula · To the Moon · Orbit Station · Asteroid Drift · Lunar Base |
-| Retro Screensavers | DVD Survivor · 3D Pipes · Endless Maze · Flying Floppies · Mystify · 3D Text · Under Construction · Pop-up Storm |
-| Nature & Landscapes | Ocean Waves · Forest Life · Northern Lights · Thunderstorm · Sakura Valley · Desert Dunes · Volcano · Waterfall |
-| Pixel Worlds | Neon City · Night Train · Arcade Room · NGMI Runner · Degen Casino · Cyber Café 2003 · Retro Racer · Pixel Harbor · Little Troop |
-| Generative Art | Game of Life · Fractal Explorer · Flow Field · Kaleidoscope · Reaction Diffusion · Spirograph · Murmuration · L-System Garden |
+| After Hours | Gary.exe · The Trenches · Lo-fi Room · Friday Deploy · Jarvis Core · Merge Conflict · 3AM Commit · Anomaly Archive · Lost & Found of the Web |
+| Terminal & Hacker | Terminal 404 · Digital Rain · Mainframe · Packet Flow · Whale Radar · Purity Scanner · Dial-Up 56k · Chat Room 1999 · Mining Farm |
+| Cozy & Relax | Fireplace · Rainy Night · Snow Cabin · Aquarium · Lava Lamp · Koi Pond · Bonsai Seasons · Laundromat · Sleeper Train |
+| Space & Cosmos | Starfield · Black Hole · Solar System · Nebula · To the Moon · Orbit Station · Asteroid Drift · Lunar Base · Observatory |
+| Retro Screensavers | DVD Survivor · 3D Pipes · Endless Maze · Flying Floppies · Mystify · 3D Text · Under Construction · Pop-up Storm · Pirate Radio |
+| Nature & Landscapes | Ocean Waves · Forest Life · Northern Lights · Thunderstorm · Sakura Valley · Desert Dunes · Volcano · Waterfall · Lighthouse Storm · Abyss |
+| Pixel Worlds | Neon City · Night Train · Arcade Room · NGMI Runner · Degen Casino · Cyber Café 2003 · Retro Racer · Pixel Harbor · Little Troop · Night Market |
+| Generative Art | Game of Life · Fractal Explorer · Flow Field · Kaleidoscope · Reaction Diffusion · Spirograph · Murmuration · L-System Garden · Zen Garden · Watchmaker |
 
 Crypto tickers, wallets, balances and verdicts shown in scenes are fictional. Not financial advice.
 

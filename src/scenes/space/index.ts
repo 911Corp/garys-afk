@@ -199,4 +199,22 @@ export const spaceScenes: SceneEntry[] = [
     ],
     load: () => import('./lunarBase'),
   },
+  {
+    meta: {
+      id: 'observatory',
+      name: 'Observatory',
+      category: 'space',
+      description: 'An observatory on a hill with its slit open: star trails slowly draw circles around the pole above the dome.',
+      version: '1.2.0',
+      render: 'pixel',
+      complexity: 1,
+      audio: ['night', 'wind'],
+      gary: false,
+      tags: ['observatory', 'star trails', 'telescope', 'night sky'],
+    },
+    settings: [
+      { key: 'speed', label: 'Exposure speed', type: 'range', min: 0.3, max: 4, step: 0.1, default: 1 },
+    ],
+    load: () => import('./observatory'),
+  },
 ]

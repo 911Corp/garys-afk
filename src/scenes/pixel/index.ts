@@ -183,4 +183,22 @@ export const pixelScenes: SceneEntry[] = [
     ],
     load: () => import('./littleTroop'),
   },
+  {
+    meta: {
+      id: 'night-market',
+      name: 'Night Market',
+      category: 'pixel',
+      description: 'A night market in light rain: lantern strings, steaming stalls, umbrellas drifting by and reflections on the wet ground.',
+      version: '1.2.0',
+      render: 'pixel',
+      complexity: 1,
+      audio: ['rain', 'night'],
+      gary: false,
+      tags: ['market', 'lanterns', 'rain', 'street food'],
+    },
+    settings: [
+      { key: 'rain', label: 'Rain', type: 'range', min: 0, max: 2, step: 0.1, default: 1 },
+    ],
+    load: () => import('./nightMarket'),
+  },
 ]

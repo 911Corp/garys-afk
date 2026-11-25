@@ -210,4 +210,22 @@ export const cozyScenes: SceneEntry[] = [
     ],
     load: () => import('./laundromat'),
   },
+  {
+    meta: {
+      id: 'sleeper-train',
+      name: 'Sleeper Train',
+      category: 'cozy',
+      description: 'A sleeper compartment at night: mountains, villages and poles roll past the window, the lamp glows and the tea trembles.',
+      version: '1.2.0',
+      render: 'pixel',
+      complexity: 1,
+      audio: ['train', 'night'],
+      gary: false,
+      tags: ['train', 'night', 'travel', 'window'],
+    },
+    settings: [
+      { key: 'speed', label: 'Train speed', type: 'range', min: 0.2, max: 3, step: 0.1, default: 1 },
+    ],
+    load: () => import('./sleeperTrain'),
+  },
 ]

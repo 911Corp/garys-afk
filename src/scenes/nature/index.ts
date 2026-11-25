@@ -198,4 +198,41 @@ export const natureScenes: SceneEntry[] = [
     ],
     load: () => import('./waterfall'),
   },
+  {
+    meta: {
+      id: 'lighthouse-storm',
+      name: 'Lighthouse Storm',
+      category: 'nature',
+      description: 'A lighthouse holds on in a storm: heavy swells, spray on the rocks, slanting rain and the beam sweeping the dark sea.',
+      version: '1.2.0',
+      render: 'pixel',
+      complexity: 1,
+      audio: ['storm', 'ocean'],
+      gary: false,
+      tags: ['lighthouse', 'storm', 'sea', 'waves', 'rain'],
+    },
+    settings: [
+      { key: 'storm', label: 'Storm strength', type: 'range', min: 0.3, max: 2, step: 0.1, default: 1 },
+    ],
+    load: () => import('./lighthouseStorm'),
+  },
+  {
+    meta: {
+      id: 'abyss',
+      name: 'Abyss',
+      category: 'nature',
+      description: 'The deep sea: marine snow drifts down, jellyfish pulse in blue light, a lure glows in the dark and a vent breathes bubbles.',
+      version: '1.2.0',
+      render: 'pixel',
+      complexity: 1,
+      audio: ['underwater'],
+      gary: false,
+      tags: ['deep sea', 'jellyfish', 'bioluminescence', 'ocean'],
+    },
+    settings: [
+      { key: 'life', label: 'Creatures', type: 'range', min: 0.3, max: 2, step: 0.1, default: 1 },
+      { key: 'speed', label: 'Speed', type: 'range', min: 0.3, max: 2.5, step: 0.1, default: 1 },
+    ],
+    load: () => import('./abyss'),
+  },
 ]

@@ -1,291 +1,313 @@
+import { PixelScene } from '../../engine/base'
 import { PALETTES as PX } from '../../engine/pixel'
 import type { SceneContext } from '../../engine/types'
-import { WorldScene } from './world'
+
+/**
+ * Lo-fi Room: an original pixel-art attic studio at night. Drawn on a real 256x144 pixel grid
+ * and scaled up without smoothing: a skylight in the rain, a desk with a CRT and a lamp,
+ * hanging plants, a record spinning on the cabinet, and a dog asleep in its basket.
+ */
+const PW = 256
+const PH = 144
+
+const C = {
+  wall: '#2b2140',
+  wall2: '#33284d',
+  beam: '#1c1530',
+  floor: '#3d2a33',
+  floor2: '#4a3340',
+  sky: '#141a3a',
+  sky2: '#25305e',
+  glass: '#3a4a7a',
+  wood: '#6b4430',
+  wood2: '#8a5a3c',
+  wood3: '#4a2e22',
+  lamp: '#ffd27a',
+  warm: '#ffb36a',
+  crt: '#d9d0b8',
+  crt2: '#a89f88',
+  screen: '#10241c',
+  green: '#7cf0a0',
+  leaf: '#4f9a5a',
+  leaf2: '#7cc06a',
+  pot: '#c8643a',
+  dog: '#e8c08a',
+  dog2: '#b8865a',
+  ink: '#120d1c',
+  rec: '#16121e',
+  label: '#ff7a8a',
+  pink: '#ff9ac0',
+  cream: '#f4ead8',
+}
 
 export function create(ctx: SceneContext) {
   return new LofiRoom(ctx)
 }
 
-/** A cosy room at night: rain on the window, a record spinning, a cat asleep, fairy lights. */
-class LofiRoom extends WorldScene {
+class LofiRoom extends PixelScene {
+  buf: HTMLCanvasElement
+  b: CanvasRenderingContext2D
   drops: { x: number; y: number; v: number }[] = []
-  notes: { x: number; y: number; a: number }[] = []
-  steam: { x: number; y: number; a: number }[] = []
+  slides: { x: number; y: number; v: number; len: number }[] = []
+  notes: { x: number; y: number; life: number; k: number }[] = []
+  zz: { x: number; y: number; life: number }[] = []
+  steam = [0, 0.33, 0.66]
+  stars: { x: number; y: number; p: number }[] = []
+  code: string[] = []
   constructor(ctx: SceneContext) {
     super(ctx)
-    this.drops = Array.from({ length: 70 }, () => ({ x: this.r.range(110, 470), y: this.r.range(70, 300), v: this.r.range(20, 70) }))
+    this.buf = document.createElement('canvas')
+    this.buf.width = PW
+    this.buf.height = PH
+    this.b = this.buf.getContext('2d')!
+    this.drops = Array.from({ length: 70 }, () => ({ x: 84 + this.r() * 88, y: this.r() * 60, v: this.r.range(60, 100) }))
+    this.slides = Array.from({ length: 8 }, () => ({ x: 86 + this.r() * 84, y: 10 + this.r() * 40, v: this.r.range(1, 4), len: this.r.int(2, 5) }))
+    this.stars = Array.from({ length: 22 }, () => ({ x: 86 + this.r() * 84, y: 10 + this.r() * 30, p: this.r() * 6 }))
+    this.code = Array.from({ length: 8 }, () => this.codeLine())
   }
   palette() {
     return PX.night16
   }
+  dither() {
+    return 0.2
+  }
+  codeLine() {
+    return '#'.repeat(this.r.int(2, 9))
+  }
   step(dt: number) {
     const rain = this.num('rain')
     for (const d of this.drops) {
-      d.y += d.v * dt * rain * (Math.sin(this.t * 2 + d.x) > 0.3 ? 2.5 : 0.3)
-      if (d.y > 300) {
-        d.y = 70
-        d.x = this.r.range(110, 470)
+      d.y += d.v * dt
+      if (d.y > 62) {
+        d.y = 8
+        d.x = 84 + this.r() * 88
       }
     }
-    if (this.bool('music') && this.r.chance(dt * 0.8)) this.notes.push({ x: 770, y: 300, a: 0 })
+    for (const s of this.slides) {
+      s.y += s.v * dt * (0.5 + rain * 0.5)
+      if (s.y > 60) {
+        s.y = 10
+        s.x = 86 + this.r() * 84
+      }
+    }
+    if (this.bool('music') && this.r.chance(dt * 0.9))
+      this.notes.push({ x: 204 + this.r() * 8, y: 96, life: 1, k: this.r.int(0, 1) })
     for (const n of this.notes) {
-      n.a += dt
-      n.y -= dt * 22
-      n.x += Math.sin(n.a * 2) * dt * 14
+      n.y -= dt * 8
+      n.x += Math.sin(this.t * 2 + n.y * 0.3) * dt * 6
+      n.life -= dt * 0.25
     }
-    this.notes = this.notes.filter((n) => n.a < 4)
-    if (this.r.chance(dt * 2)) this.steam.push({ x: 448 + this.r.range(-3, 3), y: 352, a: 0 })
-    for (const s of this.steam) {
-      s.a += dt
-      s.y -= dt * 14
-      s.x += Math.sin(s.a * 3) * dt * 6
+    this.notes = this.notes.filter((n) => n.life > 0)
+    if (this.r.chance(dt * 0.5)) this.zz.push({ x: 46, y: 116, life: 1 })
+    for (const z of this.zz) {
+      z.y -= dt * 4
+      z.x += dt * 3
+      z.life -= dt * 0.3
     }
-    this.steam = this.steam.filter((s) => s.a < 2.2)
+    this.zz = this.zz.filter((z) => z.life > 0)
+    this.steam = this.steam.map((s) => (s + dt * 0.4) % 1)
+    if (this.r.chance(dt * 1.5)) {
+      this.code.shift()
+      this.code.push(this.codeLine())
+    }
+  }
+  /** A filled pixel rectangle on the 256x144 grid. */
+  px(x: number, y: number, w: number, h: number, col: string) {
+    this.b.fillStyle = col
+    this.b.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h))
   }
   draw() {
+    this.compose()
     const c = this.c
+    const { w, h } = this
+    // cover the screen with the pixel picture, centred on the desk and skylight
+    const s = Math.max(w / PW, h / PH)
+    const dw = PW * s
+    const dh = PH * s
+    c.fillStyle = C.ink
+    c.fillRect(0, 0, w, h)
+    c.imageSmoothingEnabled = false
+    c.drawImage(this.buf, (w - dw) / 2 + (w < h ? -s * 6 : 0), (h - dh) / 2, dw, dh)
+    c.imageSmoothingEnabled = !this.g.retro
+  }
+  compose() {
+    const b = this.b
     const t = this.t
-    this.screen()
-    c.fillStyle = '#1a1430'
-    c.fillRect(0, 0, this.w, this.h)
-    this.world()
-    // wall with a soft lamp light
-    c.fillStyle = '#1e1838'
-    c.fillRect(-300, 0, 1560, 400)
-    this.glow(300, 250, 380, 'rgba(255,170,90,A)', 0.16 * this.g.intensity)
-    // window: night city, moon, rain sliding on the glass
-    c.save()
-    this.rr(100, 60, 380, 250, 8)
-    c.clip()
-    const sky = c.createLinearGradient(0, 60, 0, 310)
-    sky.addColorStop(0, '#0b1030')
-    sky.addColorStop(1, '#3a2a5e')
-    c.fillStyle = sky
-    c.fillRect(100, 60, 380, 250)
-    c.fillStyle = '#f2ecd8'
-    c.beginPath()
-    c.arc(410, 110, 18, 0, Math.PI * 2)
-    c.fill()
-    this.glow(410, 110, 60, 'rgba(242,236,216,A)', 0.2)
-    for (let i = 0; i < 9; i++) {
-      const bx = 100 + i * 44
-      const bh = 50 + ((i * 41) % 80)
-      c.fillStyle = '#120e28'
-      c.fillRect(bx, 310 - bh, 40, bh)
-      for (let k = 0; k < 4; k++) {
-        if (Math.sin(i * 2.3 + k * 1.9 + t * 0.07) > 0.1) {
-          c.fillStyle = k % 2 ? 'rgba(255,190,110,0.7)' : 'rgba(255,120,170,0.5)'
-          c.fillRect(bx + 8 + (k % 2) * 16, 318 - bh + Math.floor(k / 2) * 18, 8, 7)
-        }
-      }
+    const px = this.px.bind(this)
+    // wall with soft stripes
+    px(0, 0, PW, PH, C.wall)
+    for (let x = 0; x < PW; x += 8) px(x, 0, 1, 118, C.wall2)
+    // sloped ceiling beams
+    for (let i = 0; i < 4; i++) {
+      b.fillStyle = C.beam
+      b.beginPath()
+      b.moveTo(i * 64, 0)
+      b.lineTo(i * 64 + 6, 0)
+      b.lineTo(i * 64 + 40, 8)
+      b.lineTo(i * 64 + 34, 8)
+      b.fill()
     }
-    c.fillStyle = 'rgba(190,200,255,0.5)'
-    for (const d of this.drops) {
-      c.beginPath()
-      c.ellipse(d.x, d.y, 1.6, 2.6, 0, 0, Math.PI * 2)
-      c.fill()
-      c.fillRect(d.x - 0.5, d.y - 10, 1, 8)
+    px(0, 0, PW, 6, C.beam)
+    // skylight: sky, moon, stars, treetops, rain
+    px(82, 6, 92, 58, C.wood3)
+    px(84, 8, 88, 54, C.sky)
+    px(84, 34, 88, 28, C.sky2)
+    for (const st of this.stars) if (Math.sin(t * 1.5 + st.p) > -0.3) px(st.x, st.y, 1, 1, C.cream)
+    px(150, 14, 8, 8, C.cream)
+    px(149, 15, 1, 6, C.cream)
+    px(158, 15, 1, 6, C.cream)
+    px(152, 16, 2, 2, '#d8cfb8')
+    for (let x = 84; x < 172; x += 3) {
+      const th = 6 + Math.round(Math.abs(Math.sin(x * 0.7)) * 8)
+      px(x, 62 - th, 3, th, '#0e1428')
     }
-    c.restore()
-    c.strokeStyle = '#3b2f5e'
-    c.lineWidth = 8
-    this.rr(100, 60, 380, 250, 8)
-    c.stroke()
-    c.lineWidth = 5
-    c.beginPath()
-    c.moveTo(290, 60)
-    c.lineTo(290, 310)
-    c.stroke()
-    // fairy lights along the top of the window
-    for (let i = 0; i < 14; i++) {
-      const x = 90 + i * 30
-      const y = 48 + Math.sin((i / 13) * Math.PI) * 18
-      const on = 0.55 + 0.45 * Math.sin(t * 1.6 + i * 1.3)
-      const col = ['rgba(255,200,120,A)', 'rgba(255,120,170,A)', 'rgba(140,220,255,A)'][i % 3]
-      this.glow(x, y, 16, col, 0.5 * on * this.g.intensity)
-      c.fillStyle = col.replace('A', String(0.6 + 0.4 * on))
-      c.beginPath()
-      c.arc(x, y, 3.5, 0, Math.PI * 2)
-      c.fill()
+    for (const d of this.drops) if (this.num('rain') > 0) px(d.x, d.y, 1, 3, '#5a6aa8')
+    for (const s of this.slides) px(s.x, s.y, 1, s.len, '#8a9ad0')
+    // window frame cross
+    px(127, 8, 2, 54, C.wood3)
+    px(84, 34, 88, 2, C.wood3)
+    // fairy lights along the frame
+    for (let i = 0; i < 12; i++) {
+      const x = 84 + i * 8
+      const y = 4 + Math.round(Math.sin(i * 0.8) * 1.5) + 2
+      const on = Math.sin(t * 2 + i) > -0.6
+      px(x, y, 2, 2, on ? [C.lamp, C.pink, C.green][i % 3] : C.wood3)
     }
-    c.strokeStyle = '#2a2244'
-    c.lineWidth = 1.5
-    c.beginPath()
-    for (let i = 0; i < 14; i++) {
-      const x = 90 + i * 30
-      const y = 48 + Math.sin((i / 13) * Math.PI) * 18
-      if (i) c.lineTo(x, y)
-      else c.moveTo(x, y)
-    }
-    c.stroke()
-    // bookshelf on the left
-    c.fillStyle = '#2a2040'
-    c.fillRect(-40, 120, 110, 280)
-    const books = ['#b34a6a', '#e0a050', '#4a7ab0', '#6a5aa0', '#d0d0c0', '#3a8a7a']
-    for (let s = 0; s < 3; s++) {
-      c.fillStyle = '#1a142c'
-      c.fillRect(-40, 200 + s * 80, 110, 6)
-      for (let b = 0; b < 7; b++) {
-        c.fillStyle = books[(b + s * 2) % books.length]
-        c.fillRect(-34 + b * 14, 200 + s * 80 - 40 - ((b * 7) % 12), 11, 40 + ((b * 7) % 12))
-      }
-    }
-    // desk with laptop, lamp, plant and mug
-    c.fillStyle = '#3a2a3e'
-    c.fillRect(80, 360, 440, 14)
-    c.fillStyle = '#2a1e30'
-    c.fillRect(100, 374, 14, 140)
-    c.fillRect(486, 374, 14, 140)
-    // laptop
-    c.fillStyle = '#2b2540'
-    c.beginPath()
-    c.moveTo(250, 360)
-    c.lineTo(370, 360)
-    c.lineTo(356, 290)
-    c.lineTo(264, 290)
-    c.fill()
-    c.fillStyle = '#6a8ad8'
-    c.globalAlpha = 0.9
-    c.beginPath()
-    c.moveTo(270, 296)
-    c.lineTo(350, 296)
-    c.lineTo(360, 352)
-    c.lineTo(260, 352)
-    c.fill()
-    c.globalAlpha = 1
-    c.fillStyle = 'rgba(255,255,255,0.55)'
-    for (let i = 0; i < 6; i++) c.fillRect(276 + (i % 2) * 6, 306 + i * 7, 30 + ((i * 17 + Math.floor(t)) % 40), 2)
-    this.glow(310, 320, 110, 'rgba(120,150,255,A)', 0.18 * this.g.intensity)
-    c.fillStyle = '#3a3358'
-    c.fillRect(240, 358, 140, 5)
-    // lamp
-    c.fillStyle = '#d88a4a'
-    c.beginPath()
-    c.moveTo(150, 300)
-    c.lineTo(196, 300)
-    c.lineTo(184, 270)
-    c.lineTo(162, 270)
-    c.fill()
-    c.fillStyle = '#4a3a50'
-    c.fillRect(170, 300, 4, 56)
-    c.fillRect(156, 354, 32, 6)
-    this.glow(173, 312, 150, 'rgba(255,180,100,A)', 0.4 * this.g.intensity)
-    // plant
-    c.fillStyle = '#b4614a'
-    c.fillRect(398, 330, 26, 30)
-    c.fillStyle = '#4fa36a'
-    for (let i = 0; i < 6; i++) {
-      const a = -Math.PI / 2 + (i - 2.5) * 0.4 + Math.sin(t * 0.7 + i) * 0.04
-      c.beginPath()
-      c.ellipse(411 + Math.cos(a) * 18, 326 + Math.sin(a) * 18, 12, 4, a, 0, Math.PI * 2)
-      c.fill()
-    }
-    // mug and steam
-    c.fillStyle = '#e8d8c8'
-    this.rr(438, 338, 22, 22, 4)
-    c.fill()
+    // floor
+    px(0, 118, PW, 26, C.floor)
+    for (let x = 0; x < PW; x += 18) px(x, 118, 1, 26, C.floor2)
+    px(0, 118, PW, 1, C.wood3)
+    // rug
+    px(70, 128, 110, 10, '#5a3a6a')
+    for (let x = 72; x < 178; x += 6) px(x, 132, 3, 2, C.pink)
+    // desk
+    px(54, 88, 104, 4, C.wood2)
+    px(54, 92, 104, 2, C.wood3)
+    px(58, 94, 4, 24, C.wood)
+    px(150, 94, 4, 24, C.wood)
+    px(120, 94, 30, 14, C.wood)
+    px(122, 97, 26, 1, C.wood3)
+    px(122, 102, 26, 1, C.wood3)
+    // CRT with scrolling code
+    px(64, 62, 36, 26, C.crt)
+    px(64, 86, 36, 2, C.crt2)
+    px(67, 65, 30, 19, C.screen)
+    this.code.forEach((ln, i) => px(69 + (i % 3) * 2, 66 + i * 2, ln.length * 2, 1, i === this.code.length - 1 ? C.cream : C.green))
+    if (Math.sin(t * 6) > 0) px(69, 82, 2, 1, C.green)
+    px(76, 88, 12, 1, C.crt2)
+    px(92, 84, 3, 1, '#7cf0a0')
+    // keyboard
+    px(70, 86, 26, 2, '#cfc6ae')
+    // desk lamp with its warm cone
+    b.fillStyle = 'rgba(255,210,122,0.12)'
+    b.beginPath()
+    b.moveTo(136, 66)
+    b.lineTo(116, 88)
+    b.lineTo(158, 88)
+    b.fill()
+    px(146, 86, 8, 2, C.ink)
+    px(149, 72, 2, 14, C.ink)
+    px(138, 64, 12, 4, C.warm)
+    px(140, 62, 8, 2, C.warm)
+    px(141, 68, 6, 1, C.lamp)
+    // mug with steam
+    px(106, 81, 7, 7, C.cream)
+    px(113, 83, 2, 3, C.cream)
+    px(107, 82, 5, 1, '#8a5a3c')
     for (const s of this.steam) {
-      c.fillStyle = `rgba(240,230,220,${0.2 * (1 - s.a / 2.2)})`
-      c.beginPath()
-      c.arc(s.x, s.y, 2 + s.a * 3, 0, Math.PI * 2)
-      c.fill()
+      const y = Math.round(80 - s * 10)
+      const x = 108 + Math.round(Math.sin(s * 8 + t) * 1.5)
+      if (s < 0.85) px(x, y, 1, 2, 'rgba(244,234,216,0.5)')
     }
-    // record player on a cabinet
-    c.fillStyle = '#3a2a3e'
-    c.fillRect(660, 340, 240, 170)
-    c.fillStyle = '#2a1e30'
-    c.fillRect(670, 360, 105, 140)
-    c.fillRect(785, 360, 105, 140)
-    c.fillStyle = '#5a4060'
-    this.rr(680, 300, 200, 44, 6)
-    c.fill()
-    const spin = this.bool('music') ? t * 3.5 : 0
-    c.save()
-    c.translate(770, 318)
-    c.scale(1, 0.32)
-    c.fillStyle = '#121018'
-    c.beginPath()
-    c.arc(0, 0, 70, 0, Math.PI * 2)
-    c.fill()
-    c.strokeStyle = 'rgba(255,255,255,0.08)'
-    c.lineWidth = 2
-    for (let r = 24; r < 68; r += 7) {
-      c.beginPath()
-      c.arc(0, 0, r, 0, Math.PI * 2)
-      c.stroke()
+    // books and a small cactus
+    px(118, 80, 3, 8, C.label)
+    px(121, 78, 3, 10, '#6ab0ff')
+    px(124, 81, 3, 7, C.lamp)
+    px(57, 83, 5, 5, C.pot)
+    px(58, 77, 3, 6, C.leaf)
+    px(56, 79, 2, 2, C.leaf)
+    // shelf with records and plants on the right
+    px(176, 46, 66, 3, C.wood2)
+    px(176, 70, 66, 3, C.wood2)
+    const spines = [C.label, '#6ab0ff', C.lamp, C.green, C.pink, '#a68cff', C.warm, C.cream]
+    for (let i = 0; i < 14; i++) px(178 + i * 3, 56, 2, 14, spines[i % spines.length])
+    for (let i = 0; i < 4; i++) px(222 + i * 4, 36, 3, 10, spines[(i + 3) % spines.length])
+    // potted plants with trailing vines that sway
+    for (const [x, y] of [
+      [184, 38],
+      [206, 62],
+    ]) {
+      px(x, y, 8, 8, C.pot)
+      px(x + 1, y + 1, 6, 1, '#e08a5a')
+      for (let k = 0; k < 4; k++) {
+        const sway = Math.round(Math.sin(t * 0.8 + k + x) * 1)
+        for (let j = 0; j < 6 + k * 2; j++) px(x + k * 3 - 1 + (j % 2 ? 2 : 0) + sway * (j > 4 ? 1 : 0), y + 8 + j * 3, 2, 2, j % 2 ? C.leaf : C.leaf2)
+      }
+      px(x - 2, y - 4, 4, 4, C.leaf2)
+      px(x + 4, y - 6, 4, 6, C.leaf)
+      px(x + 8, y - 3, 3, 3, C.leaf2)
     }
-    c.rotate(spin)
-    c.fillStyle = '#e05a7a'
-    c.beginPath()
-    c.arc(0, 0, 20, 0, Math.PI * 2)
-    c.fill()
-    c.fillStyle = 'rgba(255,255,255,0.6)'
-    c.fillRect(4, -3, 12, 6)
-    c.restore()
-    c.strokeStyle = '#c9c2d8'
-    c.lineWidth = 3
-    c.beginPath()
-    c.moveTo(860, 306)
-    c.lineTo(842, 316)
-    c.lineTo(800, 320)
-    c.stroke()
-    // music notes floating up
-    c.fillStyle = '#ffd0e0'
-    c.font = '20px "IBM Plex Mono", monospace'
+    // hanging plant from the ceiling
+    px(40, 6, 1, 22, C.cream)
+    px(35, 28, 11, 6, C.pot)
+    for (let k = 0; k < 5; k++) {
+      const sway = Math.round(Math.sin(t * 0.7 + k) * 1)
+      for (let j = 0; j < 5 + k; j++) px(33 + k * 3 + (j % 2 ? 2 : 0) + sway, 34 + j * 3, 2, 2, j % 2 ? C.leaf : C.leaf2)
+    }
+    // record cabinet and turntable
+    px(186, 100, 50, 18, C.wood)
+    px(188, 103, 22, 12, C.wood3)
+    px(212, 103, 22, 12, C.wood3)
+    px(190, 92, 40, 8, '#2a2038')
+    const spin = this.bool('music') ? t * 3 : 0
+    px(196, 93, 18, 5, C.rec)
+    px(203, 94, 4, 3, C.label)
+    // a glint that sweeps round the record
+    const gx = Math.round(205 + Math.cos(spin) * 7)
+    px(gx, 94 + (Math.sin(spin) > 0 ? 3 : 0), 2, 1, '#5a4a6a')
+    px(222, 93, 2, 2, C.crt2)
+    px(216, 94, 7, 1, C.crt2)
+    px(226, 95, 2, 2, this.bool('music') ? C.green : C.label)
+    // speaker
+    px(238, 86, 12, 32, '#2a2038')
+    px(241, 92, 6, 6, C.ink)
+    px(241, 104, 6, 6, C.ink)
+    if (this.bool('music') && Math.sin(t * 8) > 0.3) px(242, 105, 4, 4, '#3a2e4a')
+    // music notes drifting up
     for (const n of this.notes) {
-      c.globalAlpha = Math.max(0, 1 - n.a / 4)
-      c.fillText(n.a % 2 > 1 ? '♫' : '♪', n.x, n.y)
+      const a = Math.max(0, Math.min(1, n.life))
+      b.globalAlpha = a
+      px(n.x, n.y, 1, 4, C.cream)
+      px(n.x - 2, n.y + 3, 3, 2, C.cream)
+      if (n.k) px(n.x, n.y, 3, 1, C.cream)
+      b.globalAlpha = 1
     }
-    c.globalAlpha = 1
-    // floor and rug
-    c.fillStyle = '#2a1e30'
-    c.fillRect(-300, 400, 1560, 200)
-    c.fillStyle = '#4a2f5a'
-    c.beginPath()
-    c.ellipse(560, 500, 260, 34, 0, 0, Math.PI * 2)
-    c.fill()
-    // the cat, curled up asleep, breathing
-    const br = this.g.reducedMotion ? 0 : Math.sin(t * 1.6) * 1.5
-    c.fillStyle = '#6a5a8a'
-    c.beginPath()
-    c.ellipse(560, 486, 40, 18, 0, 0, Math.PI * 2)
-    c.fill()
-    c.fillStyle = '#e8a050'
-    c.beginPath()
-    c.ellipse(560, 480 - br * 0.5, 38, 18 + br, 0, 0, Math.PI * 2)
-    c.fill()
-    c.beginPath()
-    c.ellipse(530, 478 - br * 0.5, 16, 13, -0.2, 0, Math.PI * 2)
-    c.fill()
-    c.beginPath()
-    c.moveTo(518, 470)
-    c.lineTo(522, 458)
-    c.lineTo(530, 467)
-    c.moveTo(532, 466)
-    c.lineTo(540, 456)
-    c.lineTo(543, 469)
-    c.fill()
-    c.strokeStyle = '#b06a30'
-    c.lineWidth = 2
-    c.beginPath()
-    c.arc(524, 479, 3, 0.2, Math.PI - 0.2)
-    c.moveTo(534, 479)
-    c.arc(536, 479, 3, 0.2, Math.PI - 0.2)
-    c.stroke()
-    c.strokeStyle = '#e8a050'
-    c.lineWidth = 7
-    c.lineCap = 'round'
-    c.beginPath()
-    c.moveTo(596, 486)
-    c.quadraticCurveTo(606, 500, 572, 500)
-    c.stroke()
-    c.lineCap = 'butt'
-    // z's from the cat
-    c.fillStyle = 'rgba(255,230,200,0.7)'
-    c.font = '14px "IBM Plex Mono", monospace'
-    const z = (t * 0.5) % 1
-    c.globalAlpha = 1 - z
-    c.fillText('z', 512 - z * 6, 452 - z * 26)
-    c.globalAlpha = 1
+    // dog asleep in its basket, breathing
+    px(18, 122, 40, 12, C.wood2)
+    px(18, 122, 40, 2, C.wood)
+    for (let x = 20; x < 56; x += 4) px(x, 126, 2, 6, C.wood)
+    const breathe = Math.sin(t * 1.6) > 0 ? 1 : 0
+    px(24, 114 - breathe, 26, 9 + breathe, C.dog)
+    px(26, 113 - breathe, 20, 2, C.dog)
+    px(44, 116, 9, 7, C.dog)
+    px(50, 114, 4, 5, C.dog2)
+    px(46, 119, 2, 1, C.ink)
+    px(53, 120, 2, 2, C.ink)
+    px(24, 120, 6, 3, C.dog2)
+    px(30, 116 - breathe, 8, 2, C.dog2)
+    for (const z of this.zz) {
+      b.globalAlpha = Math.max(0, z.life)
+      px(z.x, z.y, 3, 1, C.cream)
+      px(z.x + 2, z.y + 1, 1, 1, C.cream)
+      px(z.x + 1, z.y + 2, 1, 1, C.cream)
+      px(z.x, z.y + 3, 3, 1, C.cream)
+      b.globalAlpha = 1
+    }
+    // warm vignette from the lamp
+    const g = b.createRadialGradient(136, 80, 4, 136, 80, 140)
+    g.addColorStop(0, 'rgba(255,180,100,0.12)')
+    g.addColorStop(1, 'rgba(10,6,20,0.35)')
+    b.fillStyle = g
+    b.fillRect(0, 0, PW, PH)
   }
 }
