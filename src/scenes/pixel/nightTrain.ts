@@ -1,172 +1,195 @@
-import { PixelScene } from '../../engine/base'
-import { createNoise } from '../../engine/noise'
+import { PALETTES as PX } from '../../engine/pixel'
+import { rng } from '../../engine/math'
 import type { SceneContext } from '../../engine/types'
+import { PixelArtScene } from '../pixelart'
 
-const PAL = ['#05060d', '#0d1226', '#16244a', '#24407a', '#3a63a8', '#6a95d4', '#b5d0f0', '#f2f4ff', '#2a1a12', '#4a2e1c', '#7a4a28', '#b4783c', '#ffcf6a', '#fff3b0', '#1d3b2a', '#3f7a4a']
+const SCENES: Record<string, { sky: string[]; far: string; mid: string; near: string; ground: string; accent: string; snow: boolean; sea: boolean }> = {
+  country: { sky: ['#0a0c22', '#10153a', '#1a2050', '#262c62'], far: '#1c2248', mid: '#141a3a', near: '#0c1128', ground: '#0a0e20', accent: '#ffcf6a', snow: false, sea: false },
+  coast: { sky: ['#08102a', '#0c1838', '#122448', '#1a3058'], far: '#16264a', mid: '#0e1a36', near: '#0a1228', ground: '#080e1e', accent: '#ffd88a', snow: false, sea: true },
+  snow: { sky: ['#0c1024', '#141a36', '#1e2648', '#2a345c'], far: '#5a6488', mid: '#7a86a8', near: '#c8d4ec', ground: '#e8eef8', accent: '#ffcf6a', snow: true, sea: false },
+}
 
 export function create(ctx: SceneContext) {
   return new NightTrain(ctx)
 }
 
-/** Night train: the landscape slides by in layers while the compartment lamp glows and the tea shakes. */
-class NightTrain extends PixelScene {
-  noise = createNoise(19)
-  dist = 0
-  bump = 0
-  clack = 0
-  lights: { x: number; n: number }[] = []
+/**
+ * Pixel art, side view: a night train crosses a stone viaduct, its windows lit, while hills,
+ * a village and the moon slide by at their own speeds.
+ */
+class NightTrain extends PixelArtScene {
+  far!: HTMLCanvasElement
+  mid!: HTMLCanvasElement
+  scroll = 0
+  trainX = 0
+  stars: { x: number; y: number; p: number }[] = []
+  flakes: { x: number; y: number; v: number }[] = []
+  windows: boolean[] = []
   constructor(ctx: SceneContext) {
     super(ctx)
   }
   palette() {
-    return PAL
+    return PX.night16
   }
   dither() {
-    return 0.45
+    return 0.15
   }
-  get win() {
-    const { w, h } = this
-    return { x: Math.round(w * 0.1), y: Math.round(h * 0.12), w: Math.round(w * 0.8), h: Math.round(h * 0.52) }
+  get S() {
+    return SCENES[this.str('scenery')] ?? SCENES.country
+  }
+  configure() {
+    this.build()
+  }
+  /** A layer twice the grid width so it can scroll and wrap seamlessly. */
+  layer(fn: (px: (x: number, y: number, w: number, h: number, col: string) => void, W: number) => void) {
+    const cv = document.createElement('canvas')
+    cv.width = this.PW * 2
+    cv.height = this.PH
+    const c = cv.getContext('2d')!
+    fn((x, y, w, h, col) => {
+      c.fillStyle = col
+      c.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h))
+    }, cv.width)
+    return cv
+  }
+  build() {
+    const { PH } = this
+    const S = this.S
+    const R = rng(44)
+    const horizon = Math.round(PH * 0.62)
+    // far hills with a few village lights
+    this.far = this.layer((px, W) => {
+      for (let x = 0; x < W; x++) {
+        const y = Math.round(horizon - 18 - Math.abs(Math.sin((x / W) * Math.PI * 4)) * 16 - Math.sin((x / W) * Math.PI * 22) * 2)
+        px(x, y, 1, PH - y, S.far)
+      }
+      for (let i = 0; i < 26; i++) px(R.int(0, W), R.int(horizon - 14, horizon - 4), 1, 1, S.accent)
+    })
+    // mid layer: rolling ground, trees or a sea line, and a lit village
+    this.mid = this.layer((px, W) => {
+      for (let x = 0; x < W; x++) {
+        const y = Math.round(horizon - 4 - Math.sin((x / W) * Math.PI * 6) * 4)
+        px(x, y, 1, PH - y, S.mid)
+      }
+      if (S.sea) {
+        for (let x = 0; x < W; x++) px(x, horizon + 2, 1, PH - horizon - 2, '#0c1a34')
+        for (let i = 0; i < 80; i++) px(R.int(0, W), R.int(horizon + 4, PH - 20), R.int(2, 6), 1, '#2a4070')
+      }
+      for (let i = 0; i < 14; i++) {
+        const x = R.int(0, W)
+        const y = Math.round(horizon - 4 - Math.sin((x / W) * Math.PI * 6) * 4)
+        if (R.chance(0.5)) {
+          // pine
+          for (let k = 0; k < 10; k++) px(x - Math.floor(k / 3), y - 10 + k, 1 + Math.floor(k / 3) * 2, 1, S.near)
+        } else {
+          // cottage with a lit window
+          px(x, y - 6, 8, 6, S.near)
+          px(x - 1, y - 7, 10, 1, S.near)
+          px(x + 1, y - 9, 6, 2, S.near)
+          px(x + 2, y - 4, 2, 2, S.accent)
+          if (R.chance(0.5)) px(x + 5, y - 4, 2, 2, S.accent)
+        }
+      }
+    })
+    this.stars = Array.from({ length: 50 }, () => ({ x: R.int(0, this.PW), y: R.int(0, horizon - 30), p: R() * 6 }))
+    this.flakes = Array.from({ length: 50 }, () => ({ x: R() * this.PW, y: R() * PH, v: R.range(6, 14) }))
+    this.windows = Array.from({ length: 64 }, () => R.chance(0.8))
   }
   step(dt: number) {
     const sp = this.num('speed')
-    this.dist += dt * sp * 60 * this.u
-    // rail joints: a little bump at a steady rhythm
-    this.clack += dt * sp * 2.2
-    if (this.clack > 1) {
-      this.clack -= 1
-      this.bump = this.g.reducedMotion ? 0 : 1
+    this.scroll += dt * 20 * sp
+    this.trainX += dt * 40 * sp
+    for (const f of this.flakes) {
+      f.y += f.v * dt
+      f.x -= dt * 10 * sp
+      if (f.y > this.PH) f.y = 0
+      if (f.x < 0) f.x += this.PW
     }
-    this.bump = Math.max(0, this.bump - dt * 8)
-    if (this.r.chance(dt * 0.15 * sp)) this.lights.push({ x: this.dist + this.w * 1.2, n: this.r.int(3, 9) })
-    this.lights = this.lights.filter((l) => l.x - this.dist * 0.5 > -this.w)
   }
-  draw() {
-    const c = this.c
-    const { w, h, u } = this
-    const W = this.win
-    const scen = this.str('scenery')
-    const by = Math.round(this.bump * u)
-    // --- outside, clipped to the window ---
-    c.save()
-    c.beginPath()
-    c.rect(W.x, W.y + by, W.w, W.h)
-    c.clip()
-    const g = c.createLinearGradient(0, W.y, 0, W.y + W.h)
-    g.addColorStop(0, '#05060d')
-    g.addColorStop(1, scen === 'snow' ? '#24407a' : '#16244a')
-    c.fillStyle = g
-    c.fillRect(W.x, W.y, W.w, W.h)
-    for (let i = 0; i < 40; i++) {
-      const sx = W.x + ((i * 97 - this.dist * 0.02) % W.w + W.w) % W.w
-      c.fillStyle = '#b5d0f0'
-      c.fillRect(Math.round(sx), W.y + ((i * 53) % (W.h * 0.5)), 1, 1)
+  compose() {
+    const { PW, PH } = this
+    const S = this.S
+    const t = this.t
+    const horizon = Math.round(PH * 0.62)
+    this.bands(0, horizon, S.sky)
+    for (const s of this.stars) if (Math.sin(t + s.p) > -0.4) this.dot(s.x, s.y, '#e6ecff')
+    // moon with craters
+    const mx = Math.round(PW * 0.78)
+    this.disc(mx, 22, 9, '#f4f0dc')
+    this.disc(mx - 3, 19, 2, '#d8d2b8')
+    this.disc(mx + 3, 25, 1, '#d8d2b8')
+    // parallax layers
+    const off = (layer: HTMLCanvasElement, k: number) => {
+      const W = layer.width
+      const o = Math.round((this.scroll * k) % W)
+      this.b.drawImage(layer, -o, 0)
+      this.b.drawImage(layer, W - o, 0)
     }
-    c.fillStyle = '#f2f4ff'
-    c.beginPath()
-    c.arc(W.x + W.w * 0.75, W.y + W.h * 0.22, 8 * u, 0, Math.PI * 2)
-    c.fill()
-    const ridge = (speed: number, base: number, amp: number, freq: number, col: string, seed: number) => {
-      c.fillStyle = col
-      for (let x = W.x; x < W.x + W.w; x++) {
-        const wx = (x + this.dist * speed) / u
-        const y = W.y + W.h * base + this.noise.fbm2(wx * freq, seed, 3) * amp * u
-        c.fillRect(x, Math.round(y), 1, W.y + W.h - Math.round(y))
+    off(this.far, 0.25)
+    off(this.mid, 0.7)
+    // viaduct: a deck with stone arches, scrolling with the ground
+    const deck = Math.round(PH * 0.72)
+    const stone = S.snow ? '#8a92b0' : '#2a2a3e'
+    const stone2 = S.snow ? '#a8b0c8' : '#3a3a52'
+    const span = 28
+    const o = Math.round(this.scroll % span)
+    this.px(0, deck, PW, 4, stone2)
+    this.px(0, deck + 4, PW, 1, stone)
+    for (let x = -o; x < PW + span; x += span) {
+      this.px(x, deck + 5, 6, PH - deck, stone)
+      this.px(x + 1, deck + 5, 1, PH - deck, stone2)
+      // arch curve
+      for (let k = 0; k < span - 6; k++) {
+        const ay = Math.round(Math.sqrt(Math.max(0, 1 - ((k - (span - 6) / 2) / ((span - 6) / 2)) ** 2)) * 8)
+        this.px(x + 6 + k, deck + 5, 1, 9 - ay, stone)
       }
     }
-    if (scen === 'coast') {
-      ridge(0.05, 0.5, 14, 0.01, '#16244a', 1)
-      // the sea, with moonlight glints
-      c.fillStyle = '#0d1226'
-      c.fillRect(W.x, W.y + W.h * 0.6, W.w, W.h)
-      c.fillStyle = '#6a95d4'
-      for (let i = 0; i < 30; i++) {
-        const x = W.x + W.w * 0.75 + Math.sin(i * 12.9 + this.t) * 10 * u
-        const y = W.y + W.h * 0.62 + i * 1.5 * u
-        if (Math.sin(this.t * 4 + i) > 0) c.fillRect(Math.round(x), Math.round(y), Math.round(3 * u), 1)
+    // the train: locomotive and carriages with lit windows, moving left to right and looping
+    const carW = 46
+    const cars = 5
+    const len = carW * cars + 30
+    const tx = Math.round((this.trainX % (PW + len)) - len)
+    const ty = deck - 14
+    for (let i = 0; i < cars; i++) {
+      const x = tx + i * carW
+      if (x > PW || x + carW < 0) continue
+      this.px(x, ty, carW - 2, 12, '#3a1e2e')
+      this.px(x, ty, carW - 2, 1, '#5a2e44')
+      this.px(x, ty + 9, carW - 2, 1, '#c8963a')
+      for (let k = 0; k < 6; k++) {
+        const lit = this.windows[(i * 6 + k) % this.windows.length] && this.bool('lamp')
+        this.px(x + 3 + k * 7, ty + 3, 5, 4, lit ? S.accent : '#1a1020')
       }
-    } else {
-      ridge(0.05, 0.42, 18, 0.008, scen === 'snow' ? '#6a95d4' : '#16244a', 1)
-      ridge(0.25, 0.58, 10, 0.02, scen === 'snow' ? '#b5d0f0' : '#1d3b2a', 2)
-    }
-    // village lights in the middle distance
-    for (const l of this.lights) {
-      const lx = W.x + (l.x - this.dist * 0.5)
-      for (let k = 0; k < l.n; k++) {
-        c.fillStyle = k % 3 ? '#ffcf6a' : '#fff3b0'
-        c.fillRect(Math.round(lx + k * 5 * u), Math.round(W.y + W.h * 0.66 - (k % 2) * 2 * u), Math.max(1, Math.round(u)), Math.max(1, Math.round(u)))
+      // wheels
+      for (const wx of [x + 6, x + carW - 10]) {
+        this.px(wx, ty + 12, 4, 2, '#101018')
       }
     }
-    // near embankment, poles and wires rushing by
-    c.fillStyle = scen === 'snow' ? '#f2f4ff' : '#05060d'
-    c.fillRect(W.x, Math.round(W.y + W.h * 0.84), W.w, W.h)
-    const gap = 90 * u
-    const off = (this.dist * 1.6) % gap
-    c.fillStyle = '#05060d'
-    for (let x = W.x - off; x < W.x + W.w + gap; x += gap) {
-      c.fillRect(Math.round(x), W.y + Math.round(W.h * 0.2), Math.max(2, Math.round(2 * u)), W.h)
-      c.fillRect(Math.round(x - 4 * u), W.y + Math.round(W.h * 0.22), Math.round(10 * u), Math.max(1, Math.round(u)))
+    // locomotive at the front
+    const lx = tx + cars * carW
+    if (lx < PW && lx + 30 > 0) {
+      this.px(lx, ty - 2, 26, 14, '#2a2a36')
+      this.px(lx + 18, ty - 8, 8, 8, '#2a2a36')
+      this.px(lx + 4, ty - 6, 4, 4, '#2a2a36')
+      this.px(lx + 26, ty + 6, 4, 6, '#1a1a24')
+      this.px(lx + 20, ty - 6, 4, 3, S.accent)
+      // headlight beam
+      this.b.fillStyle = 'rgba(255,220,140,0.18)'
+      this.b.beginPath()
+      this.b.moveTo(lx + 30, ty + 4)
+      this.b.lineTo(lx + 90, ty - 6)
+      this.b.lineTo(lx + 90, ty + 14)
+      this.b.fill()
+      this.px(lx + 29, ty + 3, 2, 2, '#fff0c0')
+      // smoke puffs trailing back
+      for (let k = 0; k < 6; k++) {
+        const sx = lx + 5 - k * 9 - ((t * 20) % 9)
+        const sy = ty - 9 - k * 2
+        this.disc(Math.round(sx), Math.round(sy), 2 + Math.floor(k / 2), k < 2 ? '#8a8aa0' : '#5a5a72')
+      }
     }
-    c.strokeStyle = '#0d1226'
-    c.lineWidth = Math.max(1, Math.round(u * 0.6))
-    for (let x = W.x - off; x < W.x + W.w; x += gap) {
-      c.beginPath()
-      c.moveTo(x, W.y + W.h * 0.23)
-      c.quadraticCurveTo(x + gap / 2, W.y + W.h * 0.32, x + gap, W.y + W.h * 0.23)
-      c.stroke()
-    }
-    // the compartment lamp reflected faintly in the glass
-    if (this.bool('lamp')) {
-      c.globalAlpha = 0.18
-      c.fillStyle = '#ffcf6a'
-      c.fillRect(W.x + W.w * 0.12, W.y + W.h * 0.5, 6 * u, 10 * u)
-      c.globalAlpha = 1
-    }
-    c.restore()
-    // --- inside ---
-    c.translate(0, by)
-    c.fillStyle = '#4a2e1c'
-    c.fillRect(0, -2, w, W.y + 2)
-    c.fillRect(0, W.y + W.h, w, h)
-    c.fillRect(0, 0, W.x, h)
-    c.fillRect(W.x + W.w, 0, w, h)
-    c.fillStyle = '#7a4a28'
-    c.fillRect(W.x - 3 * u, W.y - 3 * u, W.w + 6 * u, 3 * u)
-    c.fillRect(W.x - 3 * u, W.y + W.h, W.w + 6 * u, 3 * u)
-    c.fillRect(W.x - 3 * u, W.y, 3 * u, W.h)
-    c.fillRect(W.x + W.w, W.y, 3 * u, W.h)
-    // wall panels
-    c.fillStyle = '#2a1a12'
-    for (let x = 0; x < w; x += 40 * u) c.fillRect(Math.round(x), W.y + W.h + 8 * u, Math.max(1, Math.round(u)), h)
-    // table, lamp and tea
-    const ty = W.y + W.h + 14 * u
-    c.fillStyle = '#b4783c'
-    c.fillRect(W.x + W.w * 0.3, ty, W.w * 0.4, 4 * u)
-    c.fillStyle = '#7a4a28'
-    c.fillRect(W.x + W.w * 0.48, ty + 4 * u, 4 * u, h)
-    const lx = W.x + W.w * 0.36
-    if (this.bool('lamp')) {
-      const lg = c.createRadialGradient(lx, ty - 10 * u, 2, lx, ty - 10 * u, 60 * u)
-      lg.addColorStop(0, 'rgba(255,207,106,0.5)')
-      lg.addColorStop(1, 'rgba(255,207,106,0)')
-      c.fillStyle = lg
-      c.fillRect(lx - 60 * u, ty - 70 * u, 120 * u, 100 * u)
-    }
-    c.fillStyle = '#ffcf6a'
-    c.fillRect(lx - 6 * u, ty - 14 * u, 12 * u, 6 * u)
-    c.fillStyle = '#7a4a28'
-    c.fillRect(lx - u, ty - 8 * u, 2 * u, 8 * u)
-    const cx = W.x + W.w * 0.58
-    c.fillStyle = '#f2f4ff'
-    c.fillRect(cx, ty - 7 * u, 8 * u, 7 * u)
-    c.fillRect(cx + 8 * u, ty - 5 * u, 2 * u, 3 * u)
-    c.fillStyle = '#b4783c'
-    c.fillRect(cx + u, ty - 6 * u + (this.bump > 0.3 ? 1 : 0), 6 * u, u)
-    // seat back on the right
-    c.fillStyle = '#16244a'
-    c.fillRect(w - W.x * 0.9, W.y + W.h * 0.4, W.x * 0.9, h)
-    c.fillStyle = '#24407a'
-    c.fillRect(w - W.x * 0.9, W.y + W.h * 0.4, W.x * 0.9, 4 * u)
-    c.setTransform(1, 0, 0, 1, 0, 0)
+    // reflection of the lit windows on the sea
+    if (S.sea) for (let x = 0; x < PW; x += 3) if (Math.sin(x * 0.7 + t * 2) > 0.6) this.dot(x, deck + 18 + (x % 7), '#ffd88a66')
+    if (S.snow) for (const f of this.flakes) this.dot(f.x, f.y, '#ffffff')
   }
 }

@@ -1,148 +1,163 @@
 import { PixelScene } from '../../engine/base'
 import { PALETTES as PX } from '../../engine/pixel'
+import { TAU, rng } from '../../engine/math'
 import type { SceneContext } from '../../engine/types'
 
-type Bird = { x: number; y: number; vx: number; vy: number }
+type Bird = { x: number; y: number; vx: number; vy: number; u: number; v: number; ph: number }
 
 export function create(ctx: SceneContext) {
   return new Murmuration(ctx)
 }
 
-/** A starling murmuration at dusk: hundreds of birds following three simple rules, folding into one shape. */
+/**
+ * Murmuration, in silhouette: thousands of starlings over a marsh at dusk. Each bird follows a
+ * point on a living shape that stretches, turns and folds, plus a little flutter of its own,
+ * so the flock always reads as one body. Reeds, a far treeline and the still water are cut flat.
+ */
 class Murmuration extends PixelScene {
   birds: Bird[] = []
-  grid = new Map<number, number[]>()
-  target = { x: 0.5, y: 0.4 }
+  land!: HTMLCanvasElement
   constructor(ctx: SceneContext) {
     super(ctx)
-    this.configure()
+    this.layout()
   }
   palette() {
     return PX.night16
   }
   dither() {
-    return 0.4
+    return 0.3
+  }
+  get horizon() {
+    return this.h * (this.h > this.w ? 0.7 : 0.72)
   }
   configure() {
-    const n = Math.round(600 * this.num('birds') * this.density)
-    while (this.birds.length < n) {
-      const a = this.r() * Math.PI * 2
-      this.birds.push({ x: 0.5 + this.r.range(-0.1, 0.1), y: 0.4 + this.r.range(-0.08, 0.08), vx: Math.cos(a) * 0.1, vy: Math.sin(a) * 0.1 })
+    const R = rng(11)
+    const n = Math.round(1400 * this.num('birds') * this.density)
+    this.birds = Array.from({ length: n }, () => {
+      // a point in a soft disc: denser in the middle
+      const a = R() * TAU
+      const r = Math.sqrt(R()) * (0.6 + R() * 0.4)
+      const u = Math.cos(a) * r
+      const v = Math.sin(a) * r
+      return { x: this.w / 2, y: this.h * 0.35, vx: 0, vy: 0, u, v, ph: R() * TAU }
+    })
+  }
+  layout() {
+    const { w, h, u } = this
+    if (!w) return
+    const H = this.horizon
+    const cv = document.createElement('canvas')
+    cv.width = w
+    cv.height = h
+    const c = cv.getContext('2d')!
+    // far treeline
+    c.fillStyle = '#2a1a36'
+    c.beginPath()
+    c.moveTo(0, H)
+    const T = rng(9)
+    let tree = 0
+    for (let x = 0; x <= w; x += 3) {
+      // clumps of trees of different heights, with gaps
+      if (tree <= 0) tree = T.range(10, 40) * u
+      tree -= 3
+      const clump = Math.sin((tree / (40 * u)) * Math.PI)
+      c.lineTo(x, H - 3 * u - clump * T.range(5, 9) * u * (Math.sin(x * 0.013) * 0.4 + 0.8))
     }
-    this.birds.length = n
+    c.lineTo(w, H)
+    c.fill()
+    // water
+    const wg = c.createLinearGradient(0, H, 0, h)
+    wg.addColorStop(0, '#7a3a5a')
+    wg.addColorStop(1, '#1a1028')
+    c.fillStyle = wg
+    c.fillRect(0, H, w, h - H)
+    // near reeds on both banks
+    const R = rng(4)
+    c.strokeStyle = '#0d0814'
+    c.lineCap = 'round'
+    for (let i = 0; i < 160; i++) {
+      const side = i % 2 ? 1 : -1
+      const x = side < 0 ? R() * w * 0.32 : w - R() * w * 0.32
+      const base = h + 2
+      const hh = R.range(18, 60) * u * (1 - Math.abs(x - (side < 0 ? 0 : w)) / (w * 0.4))
+      c.lineWidth = Math.max(1, R.range(0.6, 1.4) * u)
+      c.beginPath()
+      c.moveTo(x, base)
+      c.quadraticCurveTo(x + side * 3 * u, base - hh * 0.6, x + side * R.range(2, 8) * u, base - hh)
+      c.stroke()
+      if (R.chance(0.15)) {
+        c.fillStyle = '#0d0814'
+        c.beginPath()
+        c.ellipse(x + side * 6 * u, base - hh, 1.4 * u, 4 * u, side * 0.3, 0, TAU)
+        c.fill()
+      }
+    }
+    this.land = cv
+    this.configure()
   }
   step(dt: number) {
+    const { w, h } = this
     dt = Math.min(dt, 0.05)
-    const sp = this.num('speed')
-    const asp = this.w / this.h
-    // wandering attractor keeps the flock on screen and turning
-    this.target.x = 0.5 + Math.sin(this.t * 0.13) * 0.28 + Math.sin(this.t * 0.31) * 0.08
-    this.target.y = 0.38 + Math.sin(this.t * 0.17 + 1) * 0.14
-    const cell = 0.06
-    const grid = this.grid
-    grid.clear()
-    this.birds.forEach((b, i) => {
-      const key = Math.floor(b.x / cell) * 1000 + Math.floor(b.y / cell)
-      let arr = grid.get(key)
-      if (!arr) grid.set(key, (arr = []))
-      arr.push(i)
-    })
-    const R2 = 0.06 * 0.06
-    const S2 = 0.012 * 0.012
+    const t = this.t * this.num('speed')
+    // the living shape: centre wanders, size breathes, it stretches and turns, and folds over itself
+    const cx = w * (0.5 + Math.sin(t * 0.11) * 0.22 + Math.sin(t * 0.27) * 0.06)
+    const cy = this.horizon * (0.45 + Math.sin(t * 0.17 + 1) * 0.14)
+    const size = Math.min(w, h) * (0.16 + 0.05 * Math.sin(t * 0.23))
+    const sx = size * (1.6 + 0.9 * Math.sin(t * 0.31))
+    const sy = size * (0.6 + 0.35 * Math.cos(t * 0.29))
+    const rot = Math.sin(t * 0.13) * 1.2
+    const fold = Math.sin(t * 0.37) * 0.9
+    const cr = Math.cos(rot)
+    const sr = Math.sin(rot)
     for (const b of this.birds) {
-      let ax = 0
-      let ay = 0
-      let cx = 0
-      let cy = 0
-      let sx = 0
-      let sy = 0
-      let n = 0
-      const gx = Math.floor(b.x / cell)
-      const gy = Math.floor(b.y / cell)
-      for (let ix = -1; ix <= 1; ix++)
-        for (let iy = -1; iy <= 1; iy++) {
-          const arr = grid.get((gx + ix) * 1000 + gy + iy)
-          if (!arr) continue
-          for (const j of arr) {
-            const o = this.birds[j]
-            if (o === b) continue
-            const dx = (o.x - b.x) * asp
-            const dy = o.y - b.y
-            const d2 = dx * dx + dy * dy
-            if (d2 > R2) continue
-            n++
-            ax += o.vx
-            ay += o.vy
-            cx += o.x
-            cy += o.y
-            if (d2 < S2) {
-              sx -= dx / (d2 + 1e-5)
-              sy -= dy / (d2 + 1e-5)
-            }
-          }
-          if (n > 14) break
-        }
-      let fx = 0
-      let fy = 0
-      if (n) {
-        fx += (ax / n - b.vx) * 1.4 + (cx / n - b.x) * 1.2 + sx * 0.00006
-        fy += (ay / n - b.vy) * 1.4 + (cy / n - b.y) * 1.2 + sy * 0.00006
-      }
-      fx += (this.target.x - b.x) * 0.6
-      fy += (this.target.y - b.y) * 0.6
-      b.vx += fx * dt
-      b.vy += fy * dt
-      const v = Math.hypot(b.vx, b.vy)
-      const vmax = 0.16
-      const vmin = 0.08
-      if (v > vmax) {
-        b.vx *= vmax / v
-        b.vy *= vmax / v
-      } else if (v < vmin) {
-        b.vx *= vmin / (v || 1)
-        b.vy *= vmin / (v || 1)
-      }
-      b.x += b.vx * dt * sp
-      b.y += b.vy * dt * sp
+      // bend the disc: points on one side swing round, giving the classic folding wave
+      const bu = b.u
+      const bv = b.v + fold * bu * bu
+      let tx = bu * sx
+      let ty = bv * sy
+      ;[tx, ty] = [tx * cr - ty * sr, tx * sr + ty * cr]
+      tx += cx + Math.sin(t * 2 + b.ph) * size * 0.04
+      ty += cy + Math.cos(t * 1.7 + b.ph) * size * 0.04
+      const ax = (tx - b.x) * 3.2 - b.vx * 1.8
+      const ay = (ty - b.y) * 3.2 - b.vy * 1.8
+      b.vx += ax * dt
+      b.vy += ay * dt
+      b.x += b.vx * dt
+      b.y += b.vy * dt
     }
   }
   draw() {
     const c = this.c
     const { w, h, u } = this
-    const sky = c.createLinearGradient(0, 0, 0, h)
-    sky.addColorStop(0, '#24407a')
-    sky.addColorStop(0.55, '#a3487a')
-    sky.addColorStop(0.85, '#ff8a5c')
-    sky.addColorStop(1, '#ffcf6a')
+    const H = this.horizon
+    const sky = c.createLinearGradient(0, 0, 0, H)
+    sky.addColorStop(0, '#1c2048')
+    sky.addColorStop(0.45, '#5a3270')
+    sky.addColorStop(0.8, '#d0586a')
+    sky.addColorStop(1, '#ffb070')
     c.fillStyle = sky
     c.fillRect(0, 0, w, h)
-    // birds: tiny dark flecks, slightly bigger when flying across the view
-    c.fillStyle = '#0d1226'
-    const s = Math.max(1.5, 1.2 * u)
+    // low sun on the horizon
+    const sg = c.createRadialGradient(w * 0.62, H, 0, w * 0.62, H, 60 * u)
+    sg.addColorStop(0, 'rgba(255,220,150,0.9)')
+    sg.addColorStop(1, 'rgba(255,220,150,0)')
+    c.fillStyle = sg
+    c.fillRect(w * 0.62 - 60 * u, H - 60 * u, 120 * u, 60 * u)
+    c.drawImage(this.land, 0, 0)
+    // the flock, and its reflection on the water
+    const s = Math.max(1, 0.9 * u)
+    c.fillStyle = '#120a1c'
     for (const b of this.birds) {
-      const x = b.x * w
-      const y = b.y * h
-      const side = Math.abs(b.vx) / (Math.abs(b.vx) + Math.abs(b.vy) + 1e-6)
-      c.fillRect(x, y, s * (0.8 + side), s)
+      const flap = Math.sin(this.t * 14 + b.ph) > 0 ? 1.6 : 0.8
+      c.fillRect(b.x, b.y, s * flap, s)
     }
-    // reeds and a low horizon
-    const gy = h * 0.88
-    c.fillStyle = '#16244a'
-    c.beginPath()
-    c.moveTo(0, h)
-    for (let x = 0; x <= w; x += 6 * u) c.lineTo(x, gy - Math.sin(x / (50 * u)) * 3 * u)
-    c.lineTo(w, h)
-    c.fill()
-    c.strokeStyle = '#16244a'
-    c.lineWidth = Math.max(1, 0.6 * u)
-    for (let i = 0; i < 70; i++) {
-      const x = ((i * 53) % 100) / 100 * w
-      const hh = (8 + (i % 7) * 2) * u
-      const sw = Math.sin(this.t * 0.8 + i) * 1.5 * u
-      c.beginPath()
-      c.moveTo(x, gy + 2 * u)
-      c.quadraticCurveTo(x, gy - hh * 0.5, x + sw, gy - hh)
-      c.stroke()
+    c.globalAlpha = 0.25
+    for (const b of this.birds) {
+      const ry = H + (H - b.y) * 0.35
+      if (ry < h) c.fillRect(b.x, ry, s, s * 0.6)
     }
+    c.globalAlpha = 1
+    // the reeds again in front of the reflection
+    c.drawImage(this.land, 0, H, w, h - H, 0, H, w, h - H)
   }
 }

@@ -97,3 +97,15 @@ new deployment shows up immediately; hashed assets are cache-first. Old caches a
 activate, and the page reloads once when a new worker takes control. The browser checks for a new
 worker on each visit and when the app comes back to the foreground. Full offline use needs
 one online visit first.
+
+## Art direction (v1.4)
+
+Every scene belongs to one style family, and the families are balanced across the catalogue:
+
+| Family | How it is drawn |
+| --- | --- |
+| Pixel art | `PixelArtScene` (src/scenes/pixelart.ts): composed on a small grid (short side 144 px), scaled with no smoothing. Helpers: `px`, `dot`, `disc`, `bands`, `dither2`. |
+| Flat illustration | Solid colours and clean shapes, no gradients on surfaces. |
+| Silhouettes and gradients | Flat black or near-black shapes against a gradient sky. |
+| Screens and retro web | UI-like scenes: terminals, old desktops, editors, dials. |
+| Generative | Simulations and procedural drawings. |

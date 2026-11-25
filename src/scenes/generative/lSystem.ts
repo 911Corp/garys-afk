@@ -88,7 +88,7 @@ class LSystemGarden extends PixelScene {
     return { x, segs, leaves, grow: 0, hue: this.r() }
   }
   plant() {
-    const n = Math.max(1, Math.min(5, Math.round((this.w / this.h) * 2 * this.num('plants'))))
+    const n = Math.max(2, Math.min(7, Math.round((this.w / this.h) * 3 * this.num('plants'))))
     this.plants = Array.from({ length: n }, (_, i) => this.build((i + 0.5) / n + this.r.range(-0.04, 0.04), this.r.pick(RULES), 0.25))
     this.phase = 0
   }
@@ -115,7 +115,19 @@ class LSystemGarden extends PixelScene {
     c.fillRect(0, ground, w, h - ground)
     c.fillStyle = '#6e4d33'
     c.fillRect(0, ground, w, 2 * u)
-    const size = Math.min(h * 0.8, (w / this.plants.length) * 1.3)
+    // grass tufts along the bed
+    c.strokeStyle = '#447a3c'
+    c.lineWidth = Math.max(1, 0.6 * u)
+    c.beginPath()
+    for (let x = 2 * u; x < w; x += 7 * u) {
+      const hh = (3 + ((x * 13) % 5)) * u
+      c.moveTo(x, ground)
+      c.lineTo(x - u, ground - hh)
+      c.moveTo(x, ground)
+      c.lineTo(x + u, ground - hh * 0.8)
+    }
+    c.stroke()
+    const size = Math.min(h * 0.82, (w / this.plants.length) * 1.9)
     for (const p of this.plants) {
       const bx = p.x * w
       const n = Math.floor(p.segs.length * p.grow)
@@ -139,6 +151,15 @@ class LSystemGarden extends PixelScene {
         c.stroke()
       }
       c.lineCap = 'butt'
+      // leaves along the branches as they grow
+      c.fillStyle = '#7cc06a'
+      const shownLeaves = Math.floor(p.leaves.length * p.grow)
+      for (let i = 0; i < shownLeaves; i += 2) {
+        const l = p.leaves[i]
+        c.beginPath()
+        c.ellipse(bx + (l.x + sw * l.y * l.y) * size, ground + l.y * size, 2.2 * u, 1.1 * u, i, 0, TAU)
+        c.fill()
+      }
       // blossoms appear when the plant is grown
       if (p.grow > 0.85) {
         const a = (p.grow - 0.85) / 0.15

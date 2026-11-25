@@ -169,7 +169,7 @@ export const generativeScenes: SceneEntry[] = [
     },
     settings: [
       { key: 'ink', label: 'Paper and ink', type: 'select', options: [{ value: 'night', label: 'Neon on black' }, { value: 'paper', label: 'Ink on paper' }, { value: 'gold', label: 'Gold' }], default: 'night' },
-      { key: 'pens', label: 'Pens', type: 'range', min: 1, max: 4, step: 1, default: 2 },
+      { key: 'pens', label: 'Pens', type: 'range', min: 1, max: 4, step: 1, default: 3 },
       { key: 'speed', label: 'Speed', type: 'range', min: 0.3, max: 3, step: 0.1, default: 1 },
     ],
     load: () => import('./spirograph'),

@@ -103,7 +103,7 @@ export const natureScenes: SceneEntry[] = [
       heavy: true,
       name: 'Thunderstorm',
       category: 'nature',
-      description: 'A storm over the fields: rolling clouds, slanted rain, branching lightning. Has a no-flash mode.',
+      description: 'A storm seen through a cottage window: hills, trees on the ridge, a river, rain on the pane and lightning over the valley. Has a no-flash mode.',
       version: '1.0.0',
       render: 'pixel',
       complexity: 2,

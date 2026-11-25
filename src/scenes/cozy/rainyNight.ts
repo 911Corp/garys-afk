@@ -1,119 +1,157 @@
-import { PixelScene } from '../../engine/base'
 import { PALETTES as PX } from '../../engine/pixel'
+import { rng } from '../../engine/math'
 import type { SceneContext } from '../../engine/types'
+import { PixelArtScene } from '../pixelart'
 
-const CITY: Record<string, { sky: [string, string]; win: string[] }> = {
-  warm: { sky: ['#05060d', '#16244a'], win: ['#ffcf6a', '#ff8a5c', '#fff3b0'] },
-  cool: { sky: ['#05060d', '#0d1226'], win: ['#b5d0f0', '#6a95d4', '#f2f4ff'] },
-  neon: { sky: ['#05060d', '#2a1a3a'], win: ['#a3487a', '#ff8a5c', '#6a95d4', '#ffcf6a'] },
+const CITY: Record<string, { sky: string[]; far: string; near: string; lit: string[] }> = {
+  warm: { sky: ['#0c0a1a', '#141228', '#1e1a36', '#2a2244'], far: '#1a1630', near: '#100e1e', lit: ['#ffcf6a', '#ffb050', '#ffe6a0'] },
+  cool: { sky: ['#06101c', '#0a1828', '#102236', '#183048'], far: '#0e1c2e', near: '#08121e', lit: ['#a8d8ff', '#e0f0ff', '#78b8e8'] },
+  neon: { sky: ['#0c0618', '#160a28', '#220e3a', '#30124a'], far: '#1a0c2c', near: '#0e0618', lit: ['#ff4fa8', '#4ff0ff', '#ffe04f'] },
 }
 
-interface Drop {
-  x: number
-  y: number
-  r: number
-  vy: number
-  still: boolean
+const C = {
+  frame: '#5a3a2a',
+  frame2: '#7a5038',
+  frame3: '#3a2418',
+  wall: '#2a1e28',
+  wall2: '#34262f',
+  sill: '#8a6040',
+  sill2: '#a87850',
+  wax: '#f4ead2',
+  holder: '#c8963a',
+  pot: '#b8603a',
+  leaf: '#3e7a46',
+  leaf2: '#5ea050',
+  mug: '#d8d0c0',
+  drop: '#c8dcf0',
+  drop2: '#8aa8d0',
+  rain: '#5a6a9a',
 }
+
+type Drop = { x: number; y: number; size: number; vy: number; still: number }
 
 export function create(ctx: SceneContext) {
   return new RainyNight(ctx)
 }
 
-/** Looking out of a window at a rainy city: drops sit, grow, then slide down the glass. */
-class RainyNight extends PixelScene {
-  city: HTMLCanvasElement | null = null
-  windows: { x: number; y: number; on: boolean; c: string }[] = []
-  streaks: { x: number; y: number; v: number; l: number }[] = []
+/**
+ * Pixel art: a window over a rainy city at night. Drops gather on the glass, grow, then slide
+ * down leaving a trail; a candle burns on the sill next to a plant and a mug of tea.
+ */
+class RainyNight extends PixelArtScene {
+  city!: HTMLCanvasElement
   drops: Drop[] = []
-  trail: { x: number; y: number; a: number }[] = []
+  rain: { x: number; y: number }[] = []
+  trails: { x: number; y: number; life: number }[] = []
+  lights: { x: number; y: number; on: boolean; t: number; col: number }[] = []
   flash = 0
   constructor(ctx: SceneContext) {
     super(ctx)
-    this.layout()
   }
   palette() {
     return PX.night16
   }
   dither() {
-    return 0.5
+    return 0.15
   }
-  get frame() {
-    return { x: this.w * 0.08, y: this.h * 0.06, w: this.w * 0.84, h: this.h * 0.72 }
-  }
-  layout() {
-    const { w, h, u } = this
-    const cv = document.createElement('canvas')
-    cv.width = w
-    cv.height = h
-    const c = cv.getContext('2d')!
-    const pal = CITY[this.str('city')] ?? CITY.warm
-    const g = c.createLinearGradient(0, 0, 0, h)
-    g.addColorStop(0, pal.sky[0])
-    g.addColorStop(1, pal.sky[1])
-    c.fillStyle = g
-    c.fillRect(0, 0, w, h)
-    this.windows = []
-    // three rows of buildings, far to near
-    for (const [layer, base, col] of [
-      [0, 0.55, '#0d1226'],
-      [1, 0.62, '#0a0e1c'],
-      [2, 0.7, '#05060d'],
-    ] as const) {
-      let x = -10 * u
-      while (x < w) {
-        const bw = this.r.range(18, 40) * u
-        const bh = this.r.range(30, 90) * u * (1 - layer * 0.15)
-        const top = h * base - bh
-        c.fillStyle = col
-        c.fillRect(x, top, bw, h)
-        if (layer > 0)
-          for (let wy = top + 4 * u; wy < h * 0.8; wy += 5 * u)
-            for (let wx = x + 3 * u; wx < x + bw - 3 * u; wx += 5 * u) this.windows.push({ x: wx, y: wy, on: this.r.chance(0.14), c: this.r.pick(pal.win) })
-        if (this.r.chance(0.3)) c.fillRect(x + bw / 2, top - 8 * u, 1 * u, 8 * u)
-        x += bw + this.r.range(1, 5) * u
-      }
-    }
-    this.city = cv
-    this.streaks = Array.from({ length: Math.round(140 * this.num('rain')) }, () => this.newStreak(true))
-    this.drops = []
+  get W() {
+    // window geometry: a big pane centred, with a sill below
+    const { PW, PH } = this
+    const portrait = PH > PW
+    const x0 = portrait ? 10 : Math.round(PW * 0.16)
+    const x1 = PW - x0
+    const y0 = portrait ? 16 : 10
+    const y1 = Math.round(PH * (portrait ? 0.66 : 0.74))
+    return { x0, x1, y0, y1 }
   }
   configure() {
-    this.layout()
+    this.build()
   }
-  newStreak(any: boolean) {
-    return { x: this.r.range(0, this.w), y: any ? this.r.range(0, this.h) : -10, v: this.r.range(120, 200) * this.u, l: this.r.range(3, 7) * this.u }
-  }
-  step(dt: number) {
-    const { u } = this
-    const f = this.frame
-    for (const s of this.streaks) {
-      s.y += s.v * dt
-      s.x -= s.v * dt * 0.15
-      if (s.y > this.h) Object.assign(s, this.newStreak(false))
+  build() {
+    const { PW, PH } = this
+    const W = this.W
+    const K = CITY[this.str('city')] ?? CITY.warm
+    const R = rng(31)
+    const s = document.createElement('canvas')
+    s.width = PW
+    s.height = PH
+    const c = s.getContext('2d')!
+    const px = (x: number, y: number, w: number, h: number, col: string) => {
+      c.fillStyle = col
+      c.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h))
     }
-    // static drops land on the glass and slowly grow
-    const want = 160 * this.num('glass') * this.density
-    if (this.drops.length < want && this.r.chance(dt * 30)) this.drops.push({ x: f.x + this.r() * f.w, y: f.y + this.r() * f.h, r: this.r.range(0.6, 1.6) * u, vy: 0, still: true })
-    for (const d of this.drops) {
-      if (d.still) {
-        d.r += dt * 0.05 * u
-        if (d.r > 2.2 * u && this.r.chance(dt * 0.5)) d.still = false
-      } else {
-        d.vy = Math.min(40 * u, d.vy + dt * 30 * u)
-        d.y += d.vy * dt * (0.6 + Math.sin(this.t * 3 + d.x) * 0.4)
-        d.x += Math.sin(d.y * 0.3) * 0.08
-        if (this.r.chance(dt * 6)) this.trail.push({ x: d.x, y: d.y - d.r, a: 0 })
-        // swallow the small drops in its path
-        for (const o of this.drops) if (o !== d && o.still && Math.abs(o.x - d.x) < d.r + o.r && Math.abs(o.y - d.y) < d.r + o.r) o.r = 0
+    // sky bands inside the window
+    const bh = (W.y1 - W.y0) / K.sky.length
+    K.sky.forEach((col, i) => px(W.x0, W.y0 + i * bh, W.x1 - W.x0, bh + 1, col))
+    // far skyline then near buildings, with lit windows recorded for blinking
+    this.lights = []
+    const skyline = (base: number, minH: number, maxH: number, col: string, near: boolean) => {
+      let x = W.x0
+      while (x < W.x1) {
+        const bw = Math.min(W.x1 - x, R.int(near ? 10 : 6, near ? 22 : 14))
+        const bhh = R.int(minH, maxH)
+        px(x, base - bhh, bw, bhh, col)
+        if (R.chance(0.3)) px(x + Math.floor(bw / 2) - 1, base - bhh - 4, 1, 4, col)
+        if (near) {
+          for (let wy = base - bhh + 3; wy < base - 2; wy += 4)
+            for (let wx = x + 2; wx < x + bw - 2; wx += 3)
+              if (R.chance(0.5)) this.lights.push({ x: wx, y: wy, on: R.chance(0.6), t: R.range(2, 20), col: R.int(0, K.lit.length - 1) })
+        } else {
+          for (let wy = base - bhh + 2; wy < base - 1; wy += 3)
+            for (let wx = x + 1; wx < x + bw - 1; wx += 2) if (R.chance(0.2)) px(wx, wy, 1, 1, K.lit[0] + '88')
+        }
+        x += bw + R.int(0, 2)
       }
     }
-    this.drops = this.drops.filter((d) => d.r > 0 && d.y < f.y + f.h)
-    for (const t of this.trail) t.a += dt
-    this.trail = this.trail.filter((t) => t.a < 6)
-    if (this.windows.length && this.r.chance(dt * 2)) {
-      const wn = this.r.pick(this.windows)
-      wn.on = !wn.on
+    const horizon = W.y1
+    skyline(horizon, 14, Math.round((W.y1 - W.y0) * 0.55), K.far, false)
+    skyline(horizon, 10, Math.round((W.y1 - W.y0) * 0.4), K.near, true)
+    this.city = s
+    this.rain = Array.from({ length: 60 }, () => ({ x: R.int(W.x0, W.x1), y: R.int(W.y0, W.y1) }))
+    this.drops = Array.from({ length: 40 }, () => this.newDrop(R()))
+  }
+  newDrop(r = Math.random()): Drop {
+    const W = this.W
+    return { x: Math.round(W.x0 + 2 + r * (W.x1 - W.x0 - 4)), y: Math.round(W.y0 + 2 + this.r() * (W.y1 - W.y0 - 6)), size: 1, vy: 0, still: this.r.range(1, 6) }
+  }
+  step(dt: number) {
+    if (!this.city) return
+    const W = this.W
+    const rain = this.num('rain')
+    const glass = this.num('glass')
+    for (const r of this.rain) {
+      r.y += dt * 120 * rain
+      r.x -= dt * 12
+      if (r.y > W.y1) {
+        r.y = W.y0
+        r.x = W.x0 + this.r() * (W.x1 - W.x0)
+      }
+      if (r.x < W.x0) r.x = W.x1
+    }
+    // drops on the glass: grow while still, then run down
+    const want = Math.round(40 * glass)
+    while (this.drops.length < want) this.drops.push(this.newDrop())
+    if (this.drops.length > want) this.drops.length = want
+    for (const d of this.drops) {
+      if (d.vy === 0) {
+        d.still -= dt
+        if (d.still < 0 && d.size < 3 && this.r.chance(dt * 2)) d.size++
+        if (d.size >= 3 && d.still < -2) d.vy = this.r.range(10, 22)
+      } else {
+        d.y += d.vy * dt
+        if (this.r.chance(dt * 8)) this.trails.push({ x: d.x, y: d.y - 1, life: 2.5 })
+        if (this.r.chance(dt * 1.5)) d.x += this.r.chance(0.5) ? 1 : -1
+        if (d.y > W.y1 - 2) Object.assign(d, this.newDrop())
+      }
+    }
+    for (const t of this.trails) t.life -= dt
+    this.trails = this.trails.filter((t) => t.life > 0)
+    for (const l of this.lights) {
+      l.t -= dt
+      if (l.t < 0) {
+        l.on = !l.on
+        l.t = this.r.range(4, 30)
+      }
     }
     if (this.bool('lightning') && !this.g.noFlash && this.flash <= 0 && this.r.chance(dt / 40)) {
       this.flash = 0.5
@@ -121,86 +159,90 @@ class RainyNight extends PixelScene {
     }
     this.flash = Math.max(0, this.flash - dt)
   }
-  draw() {
-    const c = this.c
-    const { w, h, u } = this
-    const f = this.frame
-    c.drawImage(this.city!, 0, 0)
-    for (const wn of this.windows) {
-      if (!wn.on) continue
-      c.fillStyle = wn.c
-      c.fillRect(wn.x, wn.y, 2 * u, 2 * u)
-    }
+  compose() {
+    const { PW, PH } = this
+    const W = this.W
+    const K = CITY[this.str('city')] ?? CITY.warm
+    const t = this.t
+    // room wall around the window
+    this.px(0, 0, PW, PH, C.wall)
+    for (let x = 0; x < PW; x += 10) this.px(x, 0, 5, PH, C.wall2)
+    this.b.drawImage(this.city, 0, 0)
+    for (const l of this.lights) if (l.on && l.x + 2 <= W.x1) this.px(l.x, l.y, 2, 2, K.lit[l.col])
     if (this.flash > 0) {
-      c.fillStyle = `rgba(181,208,240,${this.flash * (this.g.reducedMotion ? 0.2 : 0.5)})`
-      c.fillRect(0, 0, w, h)
+      this.b.fillStyle = `rgba(200,214,240,${this.flash * (this.g.reducedMotion ? 0.2 : 0.45)})`
+      this.b.fillRect(W.x0, W.y0, W.x1 - W.x0, W.y1 - W.y0)
     }
-    // rain behind the glass
-    c.fillStyle = 'rgba(181,208,240,0.45)'
-    for (const s of this.streaks) {
-      for (let i = 0; i < s.l; i += Math.max(1, u)) c.fillRect(Math.round(s.x + i * 0.15), Math.round(s.y - i), Math.max(1, Math.round(u * 0.6)), Math.max(1, Math.round(u)))
+    // falling rain outside
+    for (const r of this.rain) {
+      this.dot(r.x, r.y, C.rain)
+      this.dot(r.x, r.y + 1, C.rain)
     }
-    // a little fog at the bottom of the glass
-    const fog = c.createLinearGradient(0, f.y + f.h * 0.6, 0, f.y + f.h)
-    fog.addColorStop(0, 'rgba(106,149,212,0)')
-    fog.addColorStop(1, 'rgba(106,149,212,0.35)')
-    c.fillStyle = fog
-    c.fillRect(f.x, f.y, f.w, f.h)
-    // trails and drops on the glass
-    for (const t of this.trail) {
-      c.fillStyle = `rgba(181,208,240,${0.5 - t.a * 0.08})`
-      c.fillRect(Math.round(t.x), Math.round(t.y), Math.max(1, Math.round(u * 0.7)), Math.max(1, Math.round(u * 0.7)))
-    }
+    // drops on the glass and their trails
+    for (const tr of this.trails) this.dot(tr.x, tr.y, tr.life > 1.2 ? C.drop2 : C.rain)
     for (const d of this.drops) {
-      const r = Math.max(1, Math.round(d.r))
-      c.fillStyle = '#16244a'
-      c.fillRect(Math.round(d.x - r), Math.round(d.y - r + 1), r * 2, r * 2)
-      c.fillStyle = '#6a95d4'
-      c.fillRect(Math.round(d.x - r), Math.round(d.y - r), r * 2, r * 2 - 1)
-      c.fillStyle = '#f2f4ff'
-      c.fillRect(Math.round(d.x - r + 1), Math.round(d.y - r), Math.max(1, r - 1), 1)
+      if (d.size === 1) this.dot(d.x, d.y, C.drop2)
+      else {
+        this.px(d.x, d.y, d.size - 1, d.size, C.drop2)
+        this.dot(d.x, d.y, C.drop)
+      }
     }
-    // window frame and room
-    c.fillStyle = '#0d1226'
-    c.fillRect(0, 0, w, f.y)
-    c.fillRect(0, 0, f.x, h)
-    c.fillRect(f.x + f.w, 0, w, h)
-    c.fillRect(0, f.y + f.h, w, h)
-    c.fillStyle = '#24407a'
-    c.fillRect(f.x - 3 * u, f.y - 3 * u, f.w + 6 * u, 3 * u)
-    c.fillRect(f.x - 3 * u, f.y, 3 * u, f.h)
-    c.fillRect(f.x + f.w, f.y, 3 * u, f.h)
-    c.fillRect(f.x + f.w / 2 - 1.5 * u, f.y, 3 * u, f.h)
-    c.fillRect(f.x, f.y + f.h * 0.45, f.w, 2 * u)
+    // window frame and mullions
+    this.px(W.x0 - 4, W.y0 - 4, W.x1 - W.x0 + 8, 4, C.frame)
+    this.px(W.x0 - 4, W.y0 - 4, 4, W.y1 - W.y0 + 8, C.frame)
+    this.px(W.x1, W.y0 - 4, 4, W.y1 - W.y0 + 8, C.frame)
+    this.px(W.x0 - 4, W.y0 - 4, W.x1 - W.x0 + 8, 1, C.frame2)
+    const mx = Math.round((W.x0 + W.x1) / 2)
+    this.px(mx - 1, W.y0, 3, W.y1 - W.y0, C.frame)
+    this.px(W.x0, Math.round((W.y0 + W.y1) / 2) - 1, W.x1 - W.x0, 3, C.frame)
+    this.px(mx - 1, W.y0, 1, W.y1 - W.y0, C.frame2)
     // sill
-    c.fillStyle = '#3a63a8'
-    c.fillRect(f.x - 8 * u, f.y + f.h, f.w + 16 * u, 5 * u)
-    c.fillStyle = '#16244a'
-    c.fillRect(f.x - 8 * u, f.y + f.h + 5 * u, f.w + 16 * u, 2 * u)
-    const sy = f.y + f.h
-    if (this.bool('candle')) {
-      const cx = f.x + f.w * 0.22
-      const fl = Math.floor(this.t * 8) % 3
-      const g = c.createRadialGradient(cx, sy - 14 * u, 1, cx, sy - 14 * u, 40 * u)
-      g.addColorStop(0, 'rgba(255,138,92,0.22)')
-      g.addColorStop(1, 'rgba(255,138,92,0)')
-      c.fillStyle = g
-      c.fillRect(cx - 40 * u, sy - 54 * u, 80 * u, 60 * u)
-      c.fillStyle = '#f2f4ff'
-      c.fillRect(cx - 2 * u, sy - 10 * u, 4 * u, 10 * u)
-      c.fillStyle = fl ? '#ffcf6a' : '#ff8a5c'
-      c.fillRect(cx - 1 * u, sy - 14 * u - (fl === 2 ? u : 0), 2 * u, 3 * u)
+    const sy = W.y1
+    this.px(W.x0 - 8, sy, W.x1 - W.x0 + 16, 4, C.sill)
+    this.px(W.x0 - 8, sy, W.x1 - W.x0 + 16, 1, C.sill2)
+    this.px(W.x0 - 6, sy + 4, W.x1 - W.x0 + 12, 2, C.frame3)
+    // radiator under the sill
+    const ry = sy + 12
+    if (ry + 14 < PH) {
+      const rx0 = mx - 30
+      for (let k = 0; k < 10; k++) {
+        this.px(rx0 + k * 6, ry, 5, 18, '#5a5060')
+        this.px(rx0 + k * 6, ry, 1, 18, '#7a7084')
+      }
+      this.px(rx0 - 2, ry + 18, 62, 2, '#3a3440')
     }
-    // mug and a small plant
-    const mx = f.x + f.w * 0.7
-    c.fillStyle = '#a3487a'
-    c.fillRect(mx, sy - 7 * u, 7 * u, 7 * u)
-    c.fillRect(mx + 7 * u, sy - 5 * u, 2 * u, 3 * u)
-    c.fillStyle = '#5a2d5c'
-    c.fillRect(mx + 14 * u, sy - 6 * u, 9 * u, 6 * u)
-    c.fillStyle = '#3f7a4a'
-    c.fillRect(mx + 15 * u, sy - 12 * u, 2 * u, 6 * u)
-    c.fillRect(mx + 18 * u, sy - 15 * u, 2 * u, 9 * u)
-    c.fillRect(mx + 21 * u, sy - 11 * u, 2 * u, 5 * u)
+    // candle in a brass holder, flame flickering, warm glow on the glass
+    if (this.bool('candle')) {
+      const cx = W.x0 + 12
+      const g = this.b.createRadialGradient(cx, sy - 12, 1, cx, sy - 12, 30)
+      g.addColorStop(0, 'rgba(255,190,90,0.35)')
+      g.addColorStop(1, 'rgba(255,190,90,0)')
+      this.b.fillStyle = g
+      this.b.fillRect(cx - 30, sy - 42, 60, 46)
+      this.px(cx - 3, sy - 2, 7, 2, C.holder)
+      this.px(cx - 1, sy - 11, 3, 9, C.wax)
+      this.dot(cx, sy - 12, '#2a1e1e')
+      const fl = Math.sin(t * 9) > 0.3 ? 1 : 0
+      this.px(cx, sy - 15 - fl, 1, 3 + fl, '#ffd060')
+      this.dot(cx, sy - 13, '#ffffff')
+    }
+    // a small plant and a mug of tea at the other end
+    const px2 = W.x1 - 16
+    this.px(px2, sy - 6, 7, 6, C.pot)
+    this.px(px2 - 1, sy - 7, 9, 1, '#d07a4a')
+    for (const [dx, h] of [
+      [0, 6],
+      [2, 9],
+      [4, 7],
+      [6, 5],
+    ]) {
+      for (let k = 0; k < h; k++) this.dot(px2 + dx + (k > h / 2 ? (dx < 3 ? -1 : 1) : 0), sy - 8 - k, k % 2 ? C.leaf : C.leaf2)
+    }
+    const mx2 = W.x1 - 30
+    this.px(mx2, sy - 6, 6, 6, C.mug)
+    this.px(mx2 + 6, sy - 5, 2, 3, C.mug)
+    this.px(mx2 + 1, sy - 5, 4, 1, '#8a5a3a')
+    const st = (t * 0.5) % 1
+    this.dot(mx2 + 2 + Math.round(Math.sin(t * 2)), sy - 8 - Math.round(st * 5), '#d8d0c088')
   }
 }

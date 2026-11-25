@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.4.0 (2026-11-26)
+
+### Art direction
+- Each scene now commits to one clear style, and the styles are spread across the catalogue:
+  pixel art (a real low-resolution grid, limited palettes, no smoothing), flat illustration,
+  silhouettes and gradients, screens and retro web, and generative. A shared `PixelArtScene`
+  base composes on a grid whose short side is 144 pixels.
+
+### Redone
+- Pixel art: **Waterfall** (colour-cycled water, hand-shaded rock), **Fireplace** (a real pixel
+  fire; clock with the real time, candlesticks, books, fern, painting, window with snow),
+  **Rainy Night**, **Aquarium** (sprite fish), **Night Train** (side view over a viaduct),
+  **Pixel Harbor**, **Thunderstorm** (seen through a cottage window: hills, a line of trees on the
+  ridge, a river, rain on the pane, lightning; no-flash mode kept).
+- Silhouettes and gradients: **Observatory** (long-exposure star trails), **Murmuration** (the
+  flock follows a living shape, so it always reads as one body).
+- Flat illustration: **Lunar Base**.
+- Generative: **Spirograph** (never starts empty, three pens, shifting ink), **L-System Garden**
+  (more and bigger plants, leaves along the growth, grass).
+
 ## 1.3.1 (2026-11-25)
 
 ### Changed

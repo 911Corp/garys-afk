@@ -1,6 +1,6 @@
-# HANDOFF: Gary's AFK v1.3.0
+# HANDOFF: Gary's AFK v1.4.0
 
-For the next agent or developer. Date: 2026-11-25. State: v1.3.0 (75 scenes), tested in headless Chrome.
+For the next agent or developer. Date: 2026-11-25. State: v1.4.0 (75 scenes), tested in headless Chrome.
 **Live on GitHub Pages**: https://911corp.github.io/garys-afk/ (repo `911Corp/garys-afk`, branch
 `main`). v1.0.0 was deployed first; v1.1.0 is the redesign below.
 
@@ -16,6 +16,9 @@ For the next agent or developer. Date: 2026-11-25. State: v1.3.0 (75 scenes), te
    v1.3.0 adds Little Troop, an original tribute to 90s puzzle platformers asked for by the owner:
    the critters, level art and name are original (no character or asset from an existing game).
    The catalogue test now requires at least 8 scenes per category.
+   v1.4.0 sets the art direction: each scene belongs to one style family (pixel art, flat,
+   silhouettes and gradients, screens and retro web, generative), balanced across the catalogue.
+   Pixel-art scenes extend `src/scenes/pixelart.ts`.
    The owner asked for a Lo-fi Room in homage to a well-known lofi channel: it was redone as an
    original pixel-art room instead (no character or composition from that channel).
 3. **Gary appears in one scene only: Gary.exe, asleep, no speech bubbles** (the owner found the

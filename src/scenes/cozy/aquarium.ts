@@ -1,205 +1,224 @@
-import { PixelScene } from '../../engine/base'
 import { PALETTES as PX } from '../../engine/pixel'
-import { TAU } from '../../engine/math'
+import { rng } from '../../engine/math'
 import type { SceneContext } from '../../engine/types'
+import { PixelArtScene } from '../pixelart'
 
-type Kind = 'tetra' | 'angel' | 'clown' | 'puffer' | 'pleco' | 'tang'
-const LOOK: Record<Kind, { len: number; hgt: number; body: string; fin: string; stripe?: string }> = {
-  tetra: { len: 6, hgt: 2, body: '#5ab4e5', fin: '#e2614f', stripe: '#b6e3f0' },
-  angel: { len: 9, hgt: 11, body: '#f2f0e6', fin: '#8b8598', stripe: '#2b2236' },
-  clown: { len: 9, hgt: 5, body: '#f3a64b', fin: '#e2614f', stripe: '#f2f0e6' },
-  puffer: { len: 9, hgt: 7, body: '#f7e07a', fin: '#9fd45a', stripe: '#55305a' },
-  pleco: { len: 14, hgt: 3, body: '#55305a', fin: '#2b2236' },
-  tang: { len: 11, hgt: 7, body: '#2f6fb0', fin: '#f7e07a', stripe: '#0d0b14' },
+/**
+ * Fish sprites, facing right. Letters map to the species colours below:
+ * a = main body, b = second colour, c = fin, e = eye, w = white.
+ */
+const SPRITES: Record<string, string[]> = {
+  tetra: ['..aaaa..', 'caabbbae', '.aaaaaa.'],
+  angel: ['...c....', '..aac...', '.aabbae.', 'caaaaaa.', '.aabba..', '..aac...', '...c....'],
+  barb: ['..aaa...', '.abababe', 'caaaaaaa', '.aaaaaa.'],
+  tang: ['...aa...', '.aaaaa..', 'caaaaaae', '.aaaaaa.', '...aa...'],
+  damsel: ['..aaa..', 'cababae', '.aaaaa.'],
+  gramma: ['.aabb..', 'caabbbe', '.aabb..'],
+  guppy: ['bb.aa..', 'bbaaaae', 'bb.aa..'],
 }
-const SETS: Record<string, Kind[]> = {
-  community: ['tetra', 'tetra', 'tetra', 'angel', 'pleco'],
-  reef: ['clown', 'tang', 'puffer', 'clown', 'tang'],
-  mixed: ['tetra', 'tetra', 'clown', 'angel', 'puffer', 'tang', 'pleco'],
+const SPECIES: Record<string, { sprite: string; a: string; b: string; c: string }[]> = {
+  community: [
+    { sprite: 'tetra', a: '#4ab0e0', b: '#e8404a', c: '#8ad0f0' },
+    { sprite: 'angel', a: '#e8e4d8', b: '#3a3a44', c: '#c8c4b8' },
+    { sprite: 'barb', a: '#f0b040', b: '#2a2a30', c: '#e86a3a' },
+    { sprite: 'guppy', a: '#c8c8d0', b: '#ff6aa0', c: '#ff6aa0' },
+  ],
+  reef: [
+    { sprite: 'tang', a: '#ffd23a', b: '#ffd23a', c: '#ffe680' },
+    { sprite: 'damsel', a: '#3a6ae8', b: '#80c0ff', c: '#3a6ae8' },
+    { sprite: 'gramma', a: '#a050d0', b: '#ffd23a', c: '#a050d0' },
+    { sprite: 'damsel', a: '#f0f0f0', b: '#2a2a30', c: '#f0f0f0' },
+  ],
 }
 
-interface Fish {
-  kind: Kind
-  x: number
-  y: number
-  vx: number
-  vy: number
-  tx: number
-  ty: number
-  ph: number
-  scale: number
-}
+type Fish = { x: number; y: number; vx: number; vy: number; dir: number; kind: number; ph: number; turn: number }
 
 export function create(ctx: SceneContext) {
   return new Aquarium(ctx)
 }
 
-/** Fish with their own manners: tetras school, angelfish cruise, the pleco hugs the sand. */
-class Aquarium extends PixelScene {
+/** Pixel-art aquarium: sprite fish, swaying plants, sand and pebbles, a bubbler and light from above. */
+class Aquarium extends PixelArtScene {
+  back!: HTMLCanvasElement
   fish: Fish[] = []
-  plants: { x: number; h: number; ph: number; col: string }[] = []
-  rocks: { x: number; w: number; h: number; col: string }[] = []
-  bubbles: { x: number; y: number; ph: number }[] = []
-  sand = 0
+  plants: { x: number; h: number; col: number; kind: number; ph: number }[] = []
+  bubbles: { x: number; y: number; s: number }[] = []
   constructor(ctx: SceneContext) {
     super(ctx)
-    this.layout()
   }
   palette() {
-    return PX.console16
+    return PX.ocean16
   }
   dither() {
-    return 0.5
+    return 0.15
+  }
+  get pal() {
+    const deep = this.str('depth') === 'deep'
+    const moon = this.str('light') === 'moon'
+    if (moon) return { water: ['#0a1630', '#0c1c3a', '#0e2244', '#10284e'], ray: 'rgba(160,190,255,0.08)', sand: ['#4a4a60', '#5a5a72', '#3a3a50'], rock: ['#24283a', '#34384e', '#444a62'], dim: 0.55 }
+    if (deep) return { water: ['#0e3a5a', '#0c3050', '#0a2846', '#08203c'], ray: 'rgba(160,220,255,0.10)', sand: ['#b8a07a', '#d0b88e', '#9a8462'], rock: ['#3a4a5a', '#4e6074', '#62768a'], dim: 0.85 }
+    return { water: ['#2aa0c8', '#2290b8', '#1c80a8', '#167098'], ray: 'rgba(230,250,255,0.16)', sand: ['#e8d09a', '#f4e0b0', '#c8b07a'], rock: ['#5a6a78', '#74869a', '#90a2b4'], dim: 1 }
+  }
+  get species() {
+    const s = this.str('species')
+    if (s === 'mixed') return [...SPECIES.community, ...SPECIES.reef]
+    return SPECIES[s] ?? SPECIES.community
   }
   configure() {
-    this.layout()
+    this.build()
   }
-  layout() {
-    const { w, h, u } = this
-    this.sand = h * 0.84
-    const set = SETS[this.str('species')] ?? SETS.community
-    const n = Math.round(this.num('fish') * this.density)
-    this.fish = Array.from({ length: n }, (_, i) => {
-      const kind = set[i % set.length]
-      return { kind, x: this.r() * w, y: this.r.range(h * 0.15, this.sand - 10 * u), vx: 0, vy: 0, tx: this.r() * w, ty: this.r() * h, ph: this.r() * TAU, scale: this.r.range(0.85, 1.15) }
+  build() {
+    const { PW, PH } = this
+    const P = this.pal
+    const R = rng(8)
+    const s = document.createElement('canvas')
+    s.width = PW
+    s.height = PH
+    const c = s.getContext('2d')!
+    const px = (x: number, y: number, w: number, h: number, col: string) => {
+      c.fillStyle = col
+      c.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h))
+    }
+    const bandH = PH / P.water.length
+    P.water.forEach((col, i) => {
+      px(0, i * bandH, PW, bandH + 1, col)
+      if (i > 0) for (let x = 0; x < PW; x += 2) px(x + (i % 2), i * bandH, 1, 1, P.water[i - 1])
     })
-    this.plants = Array.from({ length: Math.round(w / (14 * u)) }, () => ({ x: this.r() * w, h: this.r.range(20, 70) * u, ph: this.r() * TAU, col: this.r.pick(['#3e9a4e', '#25604f', '#9fd45a']) }))
-    this.rocks = Array.from({ length: 6 }, () => ({ x: this.r() * w, w: this.r.range(14, 34) * u, h: this.r.range(6, 16) * u, col: this.r.pick(['#8b8598', '#55305a', '#2b2236']) }))
+    // back rocks: rounded piles
+    const floor = Math.round(PH * 0.84)
+    for (let i = 0; i < 5; i++) {
+      const rx = R.int(0, PW)
+      const rw = R.int(20, 46)
+      const rh = R.int(14, 30)
+      for (let y = 0; y < rh; y++) {
+        const half = Math.round((rw / 2) * Math.sqrt(1 - ((y - rh) / rh) ** 2))
+        for (let x = -half; x <= half; x++) {
+          const lit = x < -half * 0.3 && y < rh * 0.6
+          px(rx + x, floor - rh + y, 1, 1, lit ? P.rock[2] : (x + y) % 5 === 0 ? P.rock[0] : P.rock[1])
+        }
+      }
+    }
+    // sand with pebbles
+    for (let y = floor; y < PH; y++) for (let x = 0; x < PW; x++) {
+      const wave = Math.round(Math.sin(x * 0.08) * 1.5)
+      if (y < floor + wave) continue
+      px(x, y, 1, 1, (x * 7 + y * 13) % 11 === 0 ? P.sand[2] : y === floor + wave ? P.sand[1] : P.sand[0])
+    }
+    for (let i = 0; i < PW / 5; i++) px(R.int(0, PW), R.int(floor + 3, PH - 1), R.int(1, 3), 1, R.pick([P.sand[2], '#8a6a5a', '#6a7a8a', '#c87a5a']))
+    this.back = s
+    this.plants = Array.from({ length: Math.round(PW / 14) }, () => ({ x: R.int(2, PW - 2), h: R.int(16, Math.round(PH * 0.55)), col: R.int(0, 2), kind: R.int(0, 2), ph: R() * 6 }))
+    const n = Math.max(3, Math.round(this.num('fish')))
+    const sp = this.species
+    this.fish = Array.from({ length: n }, () => ({ x: R() * PW, y: R.range(10, floor - 12), vx: R.range(6, 14), vy: 0, dir: R.chance(0.5) ? 1 : -1, kind: R.int(0, sp.length - 1), ph: R() * 6, turn: R.range(3, 12) }))
     this.bubbles = []
   }
   step(dt: number) {
-    const { w, h, u } = this
-    const tetras = this.fish.filter((f) => f.kind === 'tetra')
-    const leader = tetras[0]
+    if (!this.back) return
+    const { PW, PH } = this
+    const floor = PH * 0.84
     for (const f of this.fish) {
-      if (f.kind === 'pleco') {
-        // the pleco crawls along the sand and stops for long rests
-        f.ty = this.sand - 2 * u
-        if (Math.abs(f.tx - f.x) < 4 * u || this.r.chance(dt / 20)) f.tx = this.r() * w
-      } else if (f.kind === 'tetra' && f !== leader && leader) {
-        f.tx = leader.x - Math.sign(leader.vx || 1) * 8 * u + Math.cos(f.ph) * 10 * u
-        f.ty = leader.y + Math.sin(f.ph) * 8 * u
-      } else if (Math.hypot(f.tx - f.x, f.ty - f.y) < 8 * u || this.r.chance(dt / 12)) {
-        f.tx = this.r.range(10 * u, w - 10 * u)
-        f.ty = this.r.range(h * 0.12, this.sand - 12 * u)
+      f.turn -= dt
+      if (f.turn < 0) {
+        f.turn = this.r.range(3, 12)
+        if (this.r.chance(0.4)) f.dir *= -1
+        f.vy = this.r.range(-4, 4)
       }
-      const speed = { tetra: 26, angel: 9, clown: 16, puffer: 7, pleco: 4, tang: 14 }[f.kind] * u
-      const dx = f.tx - f.x
-      const dy = f.ty - f.y
-      const d = Math.hypot(dx, dy) || 1
-      f.vx += ((dx / d) * speed - f.vx) * Math.min(1, dt * 1.2)
-      f.vy += ((dy / d) * speed * 0.5 - f.vy) * Math.min(1, dt * 1.2)
-      if (f.kind === 'pleco' && Math.abs(dx) < 4 * u) f.vx *= 0.9
-      f.x += f.vx * dt
-      f.y += f.vy * dt
-      f.ph += dt * (f.kind === 'tetra' ? 0.6 : 1)
+      f.x += f.dir * f.vx * dt
+      f.y += (f.vy + Math.sin(this.t * 1.5 + f.ph) * 2) * dt
+      if (f.y < 8) f.vy = Math.abs(f.vy)
+      if (f.y > floor - 10) f.vy = -Math.abs(f.vy)
+      if (f.x < -10) f.dir = 1
+      if (f.x > PW + 10) f.dir = -1
     }
-    if (this.r.chance(dt * 9)) this.bubbles.push({ x: w * 0.83 + this.r.range(-2, 2) * u, y: this.sand - 4 * u, ph: this.r() * TAU })
+    if (this.r.chance(dt * 10)) this.bubbles.push({ x: Math.round(PW * 0.82) + this.r.int(-1, 1), y: floor - 4, s: this.r.chance(0.3) ? 2 : 1 })
     for (const b of this.bubbles) {
-      b.y -= dt * 22 * u
-      b.x += Math.sin(this.t * 4 + b.ph) * 0.3
+      b.y -= dt * (18 + b.s * 6)
+      if (this.r.chance(dt * 4)) b.x += this.r.chance(0.5) ? 1 : -1
     }
-    this.bubbles = this.bubbles.filter((b) => b.y > h * 0.04)
+    this.bubbles = this.bubbles.filter((b) => b.y > 0)
   }
-  draw() {
-    const c = this.c
-    const { w, h, u } = this
-    const deep = this.str('depth') === 'deep'
-    const night = this.str('light') === 'moon'
-    const g = c.createLinearGradient(0, 0, 0, h)
-    g.addColorStop(0, night ? '#1e3d5c' : deep ? '#2f6fb0' : '#5ab4e5')
-    g.addColorStop(1, night ? '#0d0b14' : deep ? '#1e3d5c' : '#25604f')
-    c.fillStyle = g
-    c.fillRect(0, 0, w, h)
-    // light rays from the surface, swaying
+  compose() {
+    const { PW, PH } = this
+    const P = this.pal
+    const t = this.t
+    this.b.drawImage(this.back, 0, 0)
+    // light shafts from the surface, drifting
+    this.b.fillStyle = P.ray
     for (let i = 0; i < 5; i++) {
-      const x = w * (0.1 + i * 0.2) + Math.sin(this.t * 0.4 + i) * 20 * u
-      const rg = c.createLinearGradient(0, 0, 0, h * 0.8)
-      rg.addColorStop(0, `rgba(182,227,240,${night ? 0.12 : 0.3})`)
-      rg.addColorStop(1, 'rgba(182,227,240,0)')
-      c.fillStyle = rg
-      c.beginPath()
-      c.moveTo(x, 0)
-      c.lineTo(x + 14 * u, 0)
-      c.lineTo(x + 40 * u, h * 0.8)
-      c.lineTo(x + 10 * u, h * 0.8)
-      c.fill()
+      const x = ((i * 61 + t * 3) % (PW + 60)) - 30
+      this.b.beginPath()
+      this.b.moveTo(x, 0)
+      this.b.lineTo(x + 10, 0)
+      this.b.lineTo(x + 34, PH)
+      this.b.lineTo(x + 18, PH)
+      this.b.fill()
     }
     // surface shimmer
-    c.fillStyle = '#b6e3f0'
-    for (let x = 0; x < w; x += 6 * u) if (Math.sin(x * 0.2 + this.t * 3) > 0.3) c.fillRect(x, h * 0.03, 4 * u, 1)
-    // sand with pebbles
-    c.fillStyle = night ? '#55305a' : '#f3a64b'
-    c.fillRect(0, this.sand, w, h)
-    c.fillStyle = night ? '#2b2236' : '#e2614f'
-    for (let x = 0; x < w; x += 5 * u) c.fillRect(x + ((x * 7) % 3) * u, this.sand + ((x * 13) % 9) * u + 2 * u, u, u)
-    for (const r of this.rocks) {
-      c.fillStyle = r.col
-      c.fillRect(r.x, this.sand - r.h, r.w, r.h + 2 * u)
-      c.fillRect(r.x + 2 * u, this.sand - r.h - 2 * u, r.w - 4 * u, 2 * u)
-    }
-    // plants: stacked segments that sway more towards the top
+    for (let x = 0; x < PW; x += 3) if (Math.sin(x * 0.4 + t * 3) > 0.5) this.dot(x, 1, '#ffffff')
+    const floor = Math.round(PH * 0.84)
+    // plants: tall grass blades and broad-leaf stems, swaying
+    const greens = [
+      ['#2e7a3a', '#4ea04a'],
+      ['#3a8a4a', '#6cbf5a'],
+      ['#7a3a3a', '#b05a4a'],
+    ]
     for (const p of this.plants) {
-      c.fillStyle = p.col
-      for (let i = 0; i < p.h; i += Math.max(1, Math.round(u))) {
-        const k = i / p.h
-        const x = p.x + Math.sin(this.t * 1.2 + p.ph + k * 2) * k * k * 8 * u
-        c.fillRect(Math.round(x), Math.round(this.sand - i), Math.max(1, Math.round(2 * u * (1 - k * 0.5))), Math.max(1, Math.round(u)))
-        if (i % Math.round(9 * u) === 0 && k > 0.2) c.fillRect(Math.round(x + (i % 2 ? 2 : -3) * u), Math.round(this.sand - i), Math.round(3 * u), Math.max(1, Math.round(u)))
+      const [d, l] = greens[p.col]
+      for (let k = 0; k < p.h; k++) {
+        const sway = Math.round(Math.sin(t * 1.2 + p.ph + k * 0.08) * (k / p.h) * 3)
+        const y = floor - k
+        if (p.kind === 0) {
+          this.dot(p.x + sway, y, k % 3 ? d : l)
+          this.dot(p.x + 2 + Math.round(sway * 0.8), y + 2, d)
+        } else {
+          this.dot(p.x + sway, y, d)
+          if (k % 4 === 0 && k > 2) {
+            this.px(p.x + sway + 1, y, 3, 1, l)
+            this.px(p.x + sway - 3, y + 2, 3, 1, l)
+          }
+        }
       }
     }
-    // bubbler stone and bubbles
-    c.fillStyle = '#8b8598'
-    c.fillRect(w * 0.83 - 4 * u, this.sand - 3 * u, 8 * u, 3 * u)
-    c.fillStyle = '#f2f0e6'
-    for (const b of this.bubbles) c.fillRect(Math.round(b.x), Math.round(b.y), Math.max(1, Math.round(u * 1.4)), Math.max(1, Math.round(u * 1.4)))
-    // fish
-    for (const f of this.fish) this.drawFish(f)
-    if (night) {
-      c.fillStyle = 'rgba(13,11,20,0.35)'
-      c.fillRect(0, 0, w, h)
-    }
-  }
-  drawFish(f: Fish) {
-    const c = this.c
-    const u = this.u * f.scale
-    const L = LOOK[f.kind]
-    const dir = f.vx >= 0 ? 1 : -1
-    const len = L.len * u
-    const hh = L.hgt * u
-    const x = Math.round(f.x)
-    const y = Math.round(f.y)
-    const wag = Math.sin(this.t * (f.kind === 'tetra' ? 14 : 7) + f.ph) * u
-    c.save()
-    c.translate(x, y)
-    c.scale(dir, 1)
-    // tail
-    c.fillStyle = L.fin
-    c.fillRect(-len / 2 - 3 * u, -hh / 2 + wag * 0.5, 3 * u, hh)
-    // body: a stepped ellipse
-    c.fillStyle = L.body
-    const rows = Math.max(1, Math.round(hh))
-    for (let i = 0; i < rows; i++) {
-      const t = (i + 0.5) / rows - 0.5
-      const half = (len / 2) * Math.sqrt(Math.max(0, 1 - t * t * 4))
-      c.fillRect(Math.round(-half), Math.round(-hh / 2 + i), Math.round(half * 2), 1)
-    }
-    if (f.kind === 'angel') {
-      c.fillStyle = L.fin
-      c.fillRect(-u, -hh / 2 - 3 * u, 2 * u, 3 * u)
-      c.fillRect(-u, hh / 2, 2 * u, 3 * u)
-    }
-    if (L.stripe) {
-      c.fillStyle = L.stripe
-      if (f.kind === 'tetra') c.fillRect(-len / 2, -u * 0.5, len * 0.8, Math.max(1, u * 0.6))
+    // bubbler stone and the bubble column
+    this.px(Math.round(PW * 0.82) - 3, floor - 3, 7, 3, '#5a5a6a')
+    for (const b of this.bubbles) {
+      if (b.s === 1) this.dot(b.x, b.y, '#e0f6ff')
       else {
-        c.fillRect(-len * 0.1, -hh / 2 + u, Math.max(1, u), hh - 2 * u)
-        if (f.kind !== 'puffer') c.fillRect(len * 0.22, -hh / 2 + u, Math.max(1, u), hh - 2 * u)
+        this.dot(b.x, b.y - 1, '#e0f6ff')
+        this.dot(b.x - 1, b.y, '#e0f6ff')
+        this.dot(b.x + 1, b.y, '#e0f6ff')
+        this.dot(b.x, b.y + 1, '#e0f6ff')
       }
     }
-    // eye
-    c.fillStyle = '#0d0b14'
-    c.fillRect(Math.round(len / 2 - 2.5 * u), Math.round(-hh / 4), Math.max(1, Math.round(u)), Math.max(1, Math.round(u)))
-    c.restore()
+    // fish
+    const sp = this.species
+    for (const f of this.fish) {
+      const S = sp[f.kind % sp.length]
+      const rows = SPRITES[S.sprite]
+      const w = rows[0].length
+      const z = 2
+      const x0 = Math.round(f.x - w)
+      const y0 = Math.round(f.y - rows.length)
+      const wag = Math.sin(t * 8 + f.ph) > 0 ? 1 : 0
+      rows.forEach((row, ry) => {
+        for (let k = 0; k < w; k++) {
+          const ch = row[k]
+          if (ch === '.') continue
+          const col = ch === 'a' ? S.a : ch === 'b' ? S.b : ch === 'c' ? S.c : ch === 'e' ? '#101018' : '#ffffff'
+          const xx = f.dir > 0 ? x0 + k : x0 + (w - 1 - k)
+          // the tail column flicks up and down
+          const tail = ch === 'c' && k < 2 ? wag : 0
+          const dx = xx - x0
+          this.px(x0 + dx * z, y0 + (ry - tail) * z, z, z, col)
+        }
+      })
+    }
+    if (P.dim < 1) {
+      this.b.fillStyle = `rgba(4,8,24,${1 - P.dim})`
+      this.b.fillRect(0, 0, PW, PH)
+    }
+    // glass edge reflections
+    this.px(0, 0, 1, PH, '#ffffff22')
+    this.px(PW - 1, 0, 1, PH, '#00000033')
   }
 }

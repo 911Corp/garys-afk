@@ -1,183 +1,314 @@
-import { PixelScene } from '../../engine/base'
-import { createNoise } from '../../engine/noise'
+import { PALETTES as PX } from '../../engine/pixel'
+import { rng } from '../../engine/math'
 import type { SceneContext } from '../../engine/types'
+import { PixelArtScene } from '../pixelart'
 
-const PAL = ['#050608', '#0c0f16', '#151a24', '#202838', '#2e3a4e', '#44546c', '#64788e', '#9aaec2', '#e8f0ff', '#ffffff', '#1a2216', '#2a3a22', '#ffd28a']
+/** Two versions of every colour: in the dark, and lit by a lightning flash. */
+const DARK = {
+  sky: ['#080b16', '#0e1324', '#161e36', '#222c4a', '#34405e'],
+  cloud: ['#121828', '#1a2236', '#242e46'],
+  far: '#1a2236',
+  hill: '#121c1c',
+  hill2: '#182620',
+  field: '#142018',
+  field2: '#1a2a1e',
+  tree: '#0c140e',
+  tree2: '#142018',
+  rain: '#4a5878',
+}
+const LIT = {
+  sky: ['#4e5a7e', '#5e6c92', '#7080a8', '#8494bc', '#98a8cc'],
+  cloud: ['#6a7698', '#8490b2', '#a2aecc'],
+  far: '#5a6688',
+  hill: '#34463e',
+  hill2: '#405648',
+  field: '#3a4e3e',
+  field2: '#46604a',
+  tree: '#22302a',
+  tree2: '#2e4036',
+  rain: '#c4d0ec',
+}
+const ROOM = {
+  wall: '#2a201c',
+  wall2: '#332620',
+  stone: '#3a2e28',
+  frame: '#5a3c28',
+  frame2: '#7a5236',
+  frame3: '#3a2618',
+  sill: '#6a4630',
+  sill2: '#8a5e3e',
+  drop: '#b4c6e4',
+  drop2: '#7a90b8',
+}
 
-type Pt = [number, number]
+type Bolt = { pts: [number, number][]; life: number }
+type Drop = { x: number; y: number; size: number; vy: number; still: number }
 
 export function create(ctx: SceneContext) {
   return new Thunderstorm(ctx)
 }
 
 /**
- * Storm over open fields. Lightning bolts are grown by midpoint displacement with side branches.
- * With "no flash" (here or in Accessibility) the sky never flashes: bolts stay dim and short.
+ * Pixel art: a storm seen through a cottage window. Outside, only the landscape: hills, a line of
+ * trees standing on the ridge, fields running down to the glass. Rain streaks outside and gathers
+ * on the pane; lightning lights everything at once. With "no flash" the landscape is never lit
+ * and bolts stay dim and short.
  */
-class Thunderstorm extends PixelScene {
-  noise = createNoise(31)
-  clouds: HTMLCanvasElement[] = []
-  rain: { x: number; y: number; l: number; v: number }[] = []
-  bolt: { pts: Pt[]; branches: Pt[][]; life: number } | null = null
+class Thunderstorm extends PixelArtScene {
+  clouds: { x: number; y: number; w: number; r: number; v: number; shade: number }[] = []
+  trees: { x: number; h: number; kind: number }[] = []
+  rain: { x: number; y: number; v: number }[] = []
+  drops: Drop[] = []
+  trails: { x: number; y: number; life: number }[] = []
+  bolts: Bolt[] = []
   flash = 0
-  next = 4
-  scroll = 0
+  next = 2
   constructor(ctx: SceneContext) {
     super(ctx)
-    this.layout()
   }
   palette() {
-    return PAL
+    return PX.cold16
   }
   dither() {
-    return 0.6
+    return 0.15
   }
   get calm() {
     return this.g.noFlash || this.bool('noflash') || this.g.reducedMotion
   }
-  configure() {
-    this.layout()
+  /** The window opening on the grid. */
+  get W() {
+    const { PW, PH } = this
+    const portrait = PH > PW
+    const x0 = portrait ? 12 : Math.round(PW * 0.12)
+    return { x0, x1: PW - x0, y0: portrait ? 18 : 12, y1: Math.round(PH * (portrait ? 0.7 : 0.8)) }
   }
-  layout() {
-    const { w, h, u } = this
-    // two cloud layers drawn from noise, twice the screen width so they can scroll
-    this.clouds = [0, 1].map((li) => {
-      const cv = document.createElement('canvas')
-      cv.width = w * 2
-      cv.height = Math.round(h * 0.6)
-      const c = cv.getContext('2d')!
-      const img = c.createImageData(cv.width, cv.height)
-      for (let y = 0; y < cv.height; y++)
-        for (let x = 0; x < cv.width; x++) {
-          // tile horizontally by blending the noise across the seam
-          const fx = x / cv.width
-          const a = this.noise.fbm2((x / u) * 0.02 + li * 30, (y / u) * 0.03, 4)
-          const b = this.noise.fbm2(((x - cv.width) / u) * 0.02 + li * 30, (y / u) * 0.03, 4)
-          const v = a * (1 - fx) + b * fx
-          const fall = 1 - y / cv.height
-          const dens = Math.max(0, Math.min(1, (v + 0.2) * 1.8)) * (0.5 + fall * 0.7)
-          const i = (y * cv.width + x) * 4
-          const shade = 22 + dens * (li ? 60 : 40)
-          img.data[i] = shade
-          img.data[i + 1] = shade + 6
-          img.data[i + 2] = shade + 16
-          img.data[i + 3] = Math.min(255, dens * 400)
-        }
-      c.putImageData(img, 0, 0)
-      return cv
-    })
-    this.rain = Array.from({ length: Math.round(220 * this.num('rain') * this.density) }, () => ({ x: this.r() * w, y: this.r() * h, l: this.r.range(4, 9) * u, v: this.r.range(160, 240) * u }))
+  /** Ground lines inside the window, all from the same few functions so everything sits on them. */
+  farY(x: number) {
+    const W = this.W
+    const hz = W.y0 + (W.y1 - W.y0) * 0.52
+    return Math.round(hz - 6 - Math.abs(Math.sin(x * 0.025 + 0.6)) * 9 - Math.sin(x * 0.09) * 1.5)
+  }
+  ridgeY(x: number) {
+    const W = this.W
+    const hz = W.y0 + (W.y1 - W.y0) * 0.6
+    return Math.round(hz - Math.sin(x * 0.018 + 2) * 5 - Math.sin(x * 0.05) * 2)
+  }
+  build() {
+    const W = this.W
+    const R = rng(29)
+    this.clouds = Array.from({ length: 12 }, () => ({ x: R.range(W.x0 - 40, W.x1), y: R.range(W.y0 - 4, W.y0 + (W.y1 - W.y0) * 0.3), w: R.int(30, 64), r: R.int(6, 11), v: R.range(1, 3), shade: R.int(0, 2) }))
+    // a hedge of trees along the ridge, rooted on the ridge line
+    this.trees = []
+    let x = W.x0 + R.int(0, 6)
+    while (x < W.x1) {
+      if (R.chance(0.7)) this.trees.push({ x, h: R.int(7, 14), kind: R.int(0, 1) })
+      x += R.int(5, 13)
+    }
+    this.rain = Array.from({ length: 90 }, () => ({ x: R.range(W.x0, W.x1), y: R.range(W.y0, W.y1), v: R.range(90, 140) }))
+    this.drops = Array.from({ length: 30 }, () => this.newDrop())
+  }
+  newDrop(): Drop {
+    const W = this.W
+    return { x: Math.round(W.x0 + 2 + this.r() * (W.x1 - W.x0 - 4)), y: Math.round(W.y0 + 2 + this.r() * (W.y1 - W.y0 - 6)), size: 1, vy: 0, still: this.r.range(1, 6) }
   }
   strike() {
-    const { w, h } = this
-    const x0 = this.r.range(w * 0.15, w * 0.85)
-    const ground = h * 0.8
-    const grow = (a: Pt, b: Pt, depth: number, spread: number): Pt[] => {
-      if (depth === 0) return [a, b]
-      const m: Pt = [(a[0] + b[0]) / 2 + this.r.range(-spread, spread), (a[1] + b[1]) / 2]
-      return [...grow(a, m, depth - 1, spread / 2).slice(0, -1), ...grow(m, b, depth - 1, spread / 2)]
+    const W = this.W
+    let x = this.r.range(W.x0 + 10, W.x1 - 10)
+    let y = W.y0
+    const end = this.farY(Math.round(x))
+    const pts: [number, number][] = [[x, y]]
+    while (y < end) {
+      x += this.r.int(-3, 3)
+      y += this.r.int(2, 5)
+      pts.push([x, Math.min(y, end)])
     }
-    const end: Pt = [x0 + this.r.range(-w * 0.1, w * 0.1), this.calm ? h * 0.45 : ground]
-    const pts = grow([x0, h * 0.12], end, 6, w * 0.08)
-    const branches: Pt[][] = []
-    for (let i = 4; i < pts.length - 6; i += 5)
-      if (this.r.chance(0.5)) {
-        const s = pts[i]
-        const e: Pt = [s[0] + this.r.range(-w * 0.12, w * 0.12), s[1] + this.r.range(h * 0.06, h * 0.18)]
-        branches.push(grow(s, e, 4, w * 0.03))
-      }
-    this.bolt = { pts, branches, life: 0.35 }
+    this.bolts.push({ pts, life: this.calm ? 0.2 : 0.35 })
+    const start = pts[Math.min(pts.length - 1, this.r.int(1, 3))]
+    const b: [number, number][] = [start]
+    const dir = this.r.chance(0.5) ? 1 : -1
+    for (let i = 0; i < 4; i++) b.push([b[i][0] + dir * this.r.int(2, 5), b[i][1] + this.r.int(2, 4)])
+    this.bolts.push({ pts: b, life: this.calm ? 0.15 : 0.25 })
     if (!this.calm) this.flash = 1
     this.emit({ type: 'thunder', strength: this.r.range(0.5, 1), delay: this.r.range(0.4, 3) })
   }
   step(dt: number) {
-    const { w, h } = this
+    if (!this.trees.length) return
+    const W = this.W
     const wind = this.num('wind')
-    this.scroll += dt * (6 + wind * 10) * this.u
-    for (const r of this.rain) {
-      r.y += r.v * dt
-      r.x += r.v * dt * wind * 0.25
-      if (r.y > h) {
-        r.y = -r.l
-        r.x = this.r() * w
+    const rain = this.num('rain')
+    for (const cl of this.clouds) {
+      cl.x += cl.v * dt * (0.5 + Math.abs(wind)) * (wind < 0 ? -1 : 1)
+      if (cl.x > W.x1 + 10) cl.x = W.x0 - cl.w - 10
+      if (cl.x < W.x0 - cl.w - 10) cl.x = W.x1 + 10
+    }
+    for (const d of this.rain) {
+      d.y += d.v * dt * rain
+      d.x += wind * 24 * dt
+      if (d.y > W.y1) {
+        d.y = W.y0
+        d.x = W.x0 + this.r() * (W.x1 - W.x0)
       }
-      if (r.x > w) r.x -= w
-      if (r.x < 0) r.x += w
+      if (d.x > W.x1) d.x = W.x0
+      if (d.x < W.x0) d.x = W.x1
     }
-    this.next -= dt * this.num('lightning')
-    if (this.next <= 0) {
-      this.strike()
-      this.next = this.r.range(4, 12)
+    // drops on the pane: grow, then run down leaving a trail
+    for (const d of this.drops) {
+      if (d.vy === 0) {
+        d.still -= dt * rain
+        if (d.still < 0 && d.size < 3 && this.r.chance(dt * 2)) d.size++
+        if (d.size >= 3 && d.still < -2) d.vy = this.r.range(10, 22)
+      } else {
+        d.y += d.vy * dt
+        if (this.r.chance(dt * 8)) this.trails.push({ x: d.x, y: d.y - 1, life: 2.5 })
+        if (d.y > W.y1 - 2) Object.assign(d, this.newDrop())
+      }
     }
-    if (this.bolt) {
-      this.bolt.life -= dt
-      if (this.bolt.life <= 0) this.bolt = null
+    for (const t of this.trails) t.life -= dt
+    this.trails = this.trails.filter((t) => t.life > 0)
+    const freq = this.num('lightning')
+    if (freq > 0) {
+      this.next -= dt * freq
+      if (this.next <= 0) {
+        this.next = this.r.range(3, 8)
+        this.strike()
+      }
     }
-    this.flash = Math.max(0, this.flash - dt * 3)
+    for (const b of this.bolts) b.life -= dt
+    this.bolts = this.bolts.filter((b) => b.life > 0)
+    this.flash = Math.max(0, this.flash - dt * 2.5)
   }
-  draw() {
-    const c = this.c
-    const { w, h, u } = this
-    const lit = this.flash
-    const g = c.createLinearGradient(0, 0, 0, h * 0.8)
-    g.addColorStop(0, lit > 0.3 ? '#44546c' : '#0c0f16')
-    g.addColorStop(1, lit > 0.3 ? '#9aaec2' : '#202838')
-    c.fillStyle = g
-    c.fillRect(0, 0, w, h)
-    // clouds, far layer slower
-    this.clouds.forEach((cv, li) => {
-      const off = (this.scroll * (li ? 1 : 0.5)) % w
-      c.drawImage(cv, -off, li ? h * 0.02 : 0)
-      c.drawImage(cv, -off + w * 2, li ? h * 0.02 : 0)
+  compose() {
+    const { PW, PH } = this
+    const W = this.W
+    const P = this.flash > 0.35 ? LIT : DARK
+    const t = this.t
+    // ---- the room: plastered wall with a stone band ----
+    this.px(0, 0, PW, PH, ROOM.wall)
+    for (let x = 0; x < PW; x += 9) this.px(x, 0, 1, PH, ROOM.wall2)
+    // ---- the landscape, clipped to the opening ----
+    this.b.save()
+    this.b.beginPath()
+    this.b.rect(W.x0, W.y0, W.x1 - W.x0, W.y1 - W.y0)
+    this.b.clip()
+    const bandH = (W.y1 - W.y0) * 0.62 / P.sky.length
+    P.sky.forEach((col, i) => {
+      const y = Math.round(W.y0 + i * bandH)
+      this.px(W.x0, y, W.x1 - W.x0, Math.ceil(bandH) + 1, col)
+      if (i > 0) for (let x = W.x0; x < W.x1; x += 2) this.dot(x + (i % 2), y, P.sky[i - 1])
     })
-    // a glow inside the clouds even in calm mode
-    if (this.bolt) {
-      const bx = this.bolt.pts[0][0]
-      const gl = c.createRadialGradient(bx, h * 0.15, 2, bx, h * 0.15, w * 0.3)
-      gl.addColorStop(0, `rgba(154,174,194,${this.calm ? 0.3 : 0.6})`)
-      gl.addColorStop(1, 'rgba(154,174,194,0)')
-      c.fillStyle = gl
-      c.fillRect(0, 0, w, h)
+    for (const cl of this.clouds) {
+      for (let k = 0; k < 4; k++) this.disc(Math.round(cl.x + (k * cl.w) / 4), Math.round(cl.y + (k % 2)), cl.r - (k % 2), P.cloud[cl.shade])
+      this.px(cl.x - 2, cl.y + cl.r - 2, cl.w + 4, 2, P.cloud[Math.max(0, cl.shade - 1)])
     }
-    if (lit > 0) {
-      c.fillStyle = `rgba(232,240,255,${lit * 0.35})`
-      c.fillRect(0, 0, w, h)
-    }
-    // the bolt
-    if (this.bolt) {
-      const line = (pts: Pt[], width: number, col: string) => {
-        c.strokeStyle = col
-        c.lineWidth = width
-        c.beginPath()
-        pts.forEach((p, i) => (i ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1])))
-        c.stroke()
+    // lightning, behind the hills
+    for (const b of this.bolts) {
+      for (let i = 1; i < b.pts.length; i++) {
+        const [x0, y0] = b.pts[i - 1]
+        const [x1, y1] = b.pts[i]
+        const n = Math.max(1, Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0)))
+        for (let k = 0; k <= n; k++) {
+          const x = Math.round(x0 + ((x1 - x0) * k) / n)
+          const y = Math.round(y0 + ((y1 - y0) * k) / n)
+          if (!this.calm) {
+            this.dot(x - 1, y, '#b4c4ff')
+            this.dot(x + 1, y, '#b4c4ff')
+          }
+          this.dot(x, y, this.calm ? '#8a9ad0' : '#ffffff')
+        }
       }
-      const main = this.calm ? '#9aaec2' : '#ffffff'
-      line(this.bolt.pts, Math.max(1, 2 * u), main)
-      for (const b of this.bolt.branches) line(b, Math.max(1, u), this.calm ? '#64788e' : '#e8f0ff')
     }
-    // fields, a tree and a farmhouse with a lit window
-    const gy = Math.round(h * 0.8)
-    c.fillStyle = lit > 0.3 ? '#2a3a22' : '#1a2216'
-    c.fillRect(0, gy, w, h)
-    c.fillStyle = '#050608'
-    for (let x = 0; x < w; x += 1) {
-      const hill = Math.round(Math.sin(x * 0.02 / u) * 3 * u + Math.sin(x * 0.05 / u) * u)
-      c.fillRect(x, gy - hill - 2 * u, 1, hill + 2 * u)
+    // far hills, then the ridge and its trees, then the fields down to the sill
+    for (let x = W.x0; x < W.x1; x++) {
+      const fy = this.farY(x)
+      this.px(x, fy, 1, W.y1 - fy, P.far)
     }
-    const tx = w * 0.2
-    c.fillRect(tx, gy - 30 * u, 3 * u, 30 * u)
-    for (let k = 0; k < 5; k++) c.fillRect(tx - (14 - k * 2) * u, gy - (30 + k * 4) * u, (31 - k * 4) * u, 5 * u)
-    const hx = w * 0.7
-    c.fillRect(hx, gy - 16 * u, 30 * u, 16 * u)
-    for (let k = 0; k < 10; k++) c.fillRect(hx - 3 * u + k * u, gy - (16 + k) * u, 36 * u - k * 2 * u, u)
-    c.fillStyle = '#ffd28a'
-    c.fillRect(hx + 6 * u, gy - 11 * u, 5 * u, 5 * u)
-    // rain
-    c.fillStyle = lit > 0.3 ? '#e8f0ff' : '#64788e'
+    for (let x = W.x0; x < W.x1; x++) {
+      const ry = this.ridgeY(x)
+      this.px(x, ry, 1, W.y1 - ry, P.hill)
+      this.dot(x, ry, P.hill2)
+    }
     const wind = this.num('wind')
-    for (const r of this.rain) {
-      for (let i = 0; i < r.l; i += Math.max(1, u)) c.fillRect(Math.round(r.x - i * wind * 0.25), Math.round(r.y - i), 1, Math.max(1, Math.round(u)))
+    for (const tr of this.trees) {
+      const base = this.ridgeY(tr.x)
+      const lean = Math.round(wind + Math.sin(t * 2.4 + tr.x) * 0.6)
+      // trunk rooted on the ridge line
+      this.px(tr.x, base - 3, 1, 3, P.tree)
+      if (tr.kind === 0) {
+        // round crown
+        this.disc(tr.x + lean, base - 3 - Math.round(tr.h * 0.45), Math.round(tr.h * 0.45), P.tree)
+        this.disc(tr.x + lean - 1, base - 4 - Math.round(tr.h * 0.5), Math.max(1, Math.round(tr.h * 0.25)), P.tree2)
+      } else {
+        // poplar: tall and narrow
+        for (let k = 0; k < tr.h; k++) {
+          const half = Math.round(Math.sin((k / tr.h) * Math.PI) * 2)
+          this.px(tr.x - half + Math.round((lean * k) / tr.h), base - 3 - k, half * 2 + 1, 1, k % 3 ? P.tree : P.tree2)
+        }
+      }
+    }
+    // fields: bands that follow the slope, with hedgerow lines between them
+    for (let x = W.x0; x < W.x1; x++) {
+      const ry = this.ridgeY(x)
+      const span = W.y1 - ry
+      for (let k = 1; k < 4; k++) {
+        const y = Math.round(ry + span * (k * k) / 12 + Math.sin(x * 0.04 + k) * 1.5)
+        if (y < W.y1) this.px(x, y, 1, W.y1 - y, k % 2 ? P.field : P.field2)
+        if (y < W.y1) this.dot(x, y, P.tree)
+      }
+    }
+    // a river winding down the valley from the ridge, catching the sky
+    const riverTop = this.ridgeY(Math.round((W.x0 + W.x1) * 0.55)) + 2
+    for (let y = riverTop; y < W.y1; y++) {
+      const k = (y - riverTop) / (W.y1 - riverTop)
+      const cx = (W.x0 + W.x1) * 0.55 + Math.sin(k * 5.5) * (W.x1 - W.x0) * 0.12 * (0.3 + k)
+      const half = Math.max(1, Math.round(1 + k * k * 10))
+      this.px(cx - half, y, half * 2, 1, P.sky[3])
+      if ((y + Math.floor(t * 6)) % 4 === 0) this.px(cx - half + 1, y, Math.max(1, half - 1), 1, P.sky[4])
+      this.dot(cx - half - 1, y, P.tree)
+    }
+    // rain outside, slanting with the wind
+    for (const d of this.rain) {
+      const x = Math.round(d.x)
+      const y = Math.round(d.y)
+      this.dot(x, y, P.rain)
+      this.dot(x - Math.round(wind * 0.5), y - 1, P.rain)
+      this.dot(x - Math.round(wind * 1), y - 2, P.rain)
+      this.dot(x - Math.round(wind * 1.5), y - 3, P.rain)
+    }
+    // drops and trails on the glass
+    for (const tr of this.trails) this.dot(tr.x, tr.y, tr.life > 1.2 ? ROOM.drop2 : P.rain)
+    for (const d of this.drops) {
+      if (d.size === 1) this.dot(d.x, d.y, ROOM.drop2)
+      else {
+        this.px(d.x, d.y, d.size - 1, d.size, ROOM.drop2)
+        this.dot(d.x, d.y, ROOM.drop)
+      }
+    }
+    this.b.restore()
+    // ---- frame: deep reveal, four panes, sill ----
+    const fx0 = W.x0 - 5
+    const fy0 = W.y0 - 5
+    const fw = W.x1 - W.x0 + 10
+    const fh = W.y1 - W.y0 + 5
+    this.px(fx0, fy0, fw, 5, ROOM.frame)
+    this.px(fx0, fy0, 5, fh, ROOM.frame)
+    this.px(W.x1, fy0, 5, fh, ROOM.frame)
+    this.px(fx0, fy0, fw, 1, ROOM.frame2)
+    this.px(fx0, fy0, 1, fh, ROOM.frame2)
+    this.px(W.x1 + 4, fy0, 1, fh, ROOM.frame3)
+    const mx = Math.round((W.x0 + W.x1) / 2)
+    const my = Math.round((W.y0 + W.y1) / 2)
+    this.px(mx - 1, W.y0, 3, W.y1 - W.y0, ROOM.frame)
+    this.px(mx - 1, W.y0, 1, W.y1 - W.y0, ROOM.frame2)
+    this.px(W.x0, my - 1, W.x1 - W.x0, 3, ROOM.frame)
+    this.px(W.x0, my - 1, W.x1 - W.x0, 1, ROOM.frame2)
+    // sill
+    this.px(fx0 - 4, W.y1, fw + 8, 5, ROOM.sill)
+    this.px(fx0 - 4, W.y1, fw + 8, 1, ROOM.sill2)
+    this.px(fx0 - 2, W.y1 + 5, fw + 4, 2, ROOM.frame3)
+    // a flash also lights the room a little
+    if (this.flash > 0 && !this.calm) {
+      this.b.fillStyle = `rgba(180,196,240,${this.flash * 0.18})`
+      this.b.fillRect(0, 0, PW, PH)
     }
   }
 }

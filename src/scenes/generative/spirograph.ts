@@ -62,6 +62,30 @@ class Spirograph extends PixelScene {
       p.py = y
       return p
     })
+    // start with a quarter of each curve already drawn, so the sheet is never empty
+    for (let k = 0; k < 40; k++) this.advance(12)
+  }
+  /** Moves every pen by n small steps, drawing as it goes; the ink shifts hue slowly along the line. */
+  advance(n: number) {
+    const sc = this.sc
+    sc.lineWidth = Math.max(1, 0.6 * this.u)
+    sc.lineCap = 'round'
+    const night = this.str('ink') !== 'paper'
+    this.pens.forEach((p, i) => {
+      sc.strokeStyle = night ? `hsl(${(p.th * 6 + i * 90 ) % 360},90%,${60 + i * 4}%)` : p.col
+      sc.globalAlpha = 0.85
+      sc.beginPath()
+      sc.moveTo(p.px, p.py)
+      for (let k = 0; k < n; k++) {
+        p.th += 0.02 * p.speed
+        const [x, y] = this.at(p)
+        sc.lineTo(x, y)
+        p.px = x
+        p.py = y
+      }
+      sc.stroke()
+    })
+    sc.globalAlpha = 1
   }
   at(p: Pen): [number, number] {
     const k = p.R - p.r
@@ -73,19 +97,8 @@ class Spirograph extends PixelScene {
     sc.lineWidth = Math.max(1, 0.45 * this.u)
     sc.globalAlpha = 0.85
     let done = true
+    this.advance(Math.ceil(15 * sp * Math.min(2, dt * 60)))
     for (const p of this.pens) {
-      const steps = Math.ceil(30 * sp * dt * 60) / 2
-      sc.strokeStyle = p.col
-      sc.beginPath()
-      sc.moveTo(p.px, p.py)
-      for (let i = 0; i < steps; i++) {
-        p.th += 0.02 * p.speed
-        const [x, y] = this.at(p)
-        sc.lineTo(x, y)
-        p.px = x
-        p.py = y
-      }
-      sc.stroke()
       p.life += dt * sp
       if (p.life < 40) done = false
     }
