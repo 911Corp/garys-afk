@@ -4,10 +4,10 @@ import { defaultSettings, sanitizeSettings } from '../../src/engine/types'
 import { CATEGORIES, SCENES } from '../../src/scenes/registry'
 
 describe('scene catalogue', () => {
-  it('has 64 scenes, 8 per category, unique stable ids', () => {
-    expect(SCENES).toHaveLength(64)
-    expect(new Set(SCENES.map((s) => s.meta.id)).size).toBe(64)
-    for (const c of CATEGORIES) expect(SCENES.filter((s) => s.meta.category === c.id)).toHaveLength(8)
+  it('has 65 scenes, at least 8 per category, unique stable ids', () => {
+    expect(SCENES).toHaveLength(65)
+    expect(new Set(SCENES.map((s) => s.meta.id)).size).toBe(65)
+    for (const c of CATEGORIES) expect(SCENES.filter((s) => s.meta.category === c.id).length).toBeGreaterThanOrEqual(8)
   })
   it('every scene has a real thumbnail, a description, an ambience and valid defaults', () => {
     for (const s of SCENES) {

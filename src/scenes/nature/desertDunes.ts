@@ -35,8 +35,8 @@ class DesertDunes extends PixelScene {
   crest(layer: number, x: number) {
     const { w, h } = this
     const base = h * (0.5 + layer * 0.12)
-    const amp = h * (0.05 + layer * 0.025)
-    const f = 1 / (w * (0.35 + layer * 0.12))
+    const amp = Math.min(h, w * 0.9) * (0.05 + layer * 0.025)
+    const f = 1 / (Math.max(w, h * 1.4) * (0.35 + layer * 0.12))
     const drift = this.t * 0.002 * (layer + 1) * this.num('wind')
     return base - amp * (Math.sin(x * f * TAU + layer * 1.7 + drift) * 0.6 + Math.sin(x * f * TAU * 2.3 + layer + drift * 1.3) * 0.4)
   }

@@ -100,7 +100,7 @@ npm test                      # the catalogue test checks ids, thumbnails and de
 npm run build && npm run test:e2e
 ```
 
-The catalogue unit test currently expects exactly 64 scenes and 8 per category: update it when you
+The catalogue unit test currently expects the exact scene total and at least 8 per category: update it when you
 add a pack.
 
 ## The diversity rule

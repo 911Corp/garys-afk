@@ -44,7 +44,7 @@ class NgmiRunner extends PixelScene {
   }
   /** World units: the LCD is 320 wide, the ground at y = 0, up is positive. */
   get scale() {
-    return Math.min(this.w / 200, this.h / 110)
+    return Math.max(Math.min(this.w / 200, this.h / 110), this.w / 130)
   }
   /** Visible world width. */
   get VW() {
@@ -201,7 +201,7 @@ class NgmiRunner extends PixelScene {
     c.textAlign = 'left'
     c.fillStyle = MIDINK
     font(c, 7 * s, VT)
-    c.fillText('GARY’S ADVENTURES: NGMI  //  DEMO', X(8), Y(top))
+    c.fillText(VW > 210 ? 'GARY\u2019S ADVENTURES: NGMI  //  DEMO' : 'NGMI  //  DEMO', X(8), Y(top))
     if (this.dead) {
       c.textAlign = 'center'
       font(c, 16 * s, VT)

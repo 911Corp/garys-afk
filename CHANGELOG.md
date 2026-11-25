@@ -1,5 +1,27 @@
 # Changelog
 
+## 1.3.0 (2026-11-25)
+
+### Added
+- **Little Troop** (Pixel Worlds): a 90s-style puzzle platformer in attract mode with an original
+  crew in orange beanies. They drop from a hatch, dig, tunnel, build stairs and bridges, float down
+  under umbrellas and head for the lantern door; a new level is carved when the troop is home.
+
+### Changed
+- **Waterfall** rebuilt: a great fall through a notch in a towering cliff, seen from the plunge
+  pool, with rolling mist, light shafts, a rainbow, vines, birds and jungle fronds framing the view.
+  New **Light** setting: day, golden hour, moonlight. Every element is placed from one geometry.
+- **Pop-up Storm** redrawn the old-desktop way: pixel-art desktop icons (computer, recycle bin,
+  folder, text file, app), bevelled windows and buttons with a focus ring, the classic message
+  icons (error, warning, information, question), boxes sized to their text, one taskbar button
+  per window, a tray clock and a Jarvis balloon.
+
+### Fixed (phone / portrait)
+- Dial-Up 56k is centred instead of leaving the bottom half empty.
+- Laundromat stacks a second row of machines in portrait.
+- Desert Dunes no longer turn into spikes on tall screens.
+- NGMI Runner is larger on phones and its title no longer overlaps the score.
+
 ## 1.2.0 (2026-11-25)
 
 ### Changed

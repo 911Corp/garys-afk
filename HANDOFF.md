@@ -1,6 +1,6 @@
-# HANDOFF: Gary's AFK v1.2.0
+# HANDOFF: Gary's AFK v1.3.0
 
-For the next agent or developer. Date: 2026-11-25. State: v1.2.0 (64 scenes), tested in headless Chrome.
+For the next agent or developer. Date: 2026-11-25. State: v1.3.0 (65 scenes), tested in headless Chrome.
 **Live on GitHub Pages**: https://911corp.github.io/garys-afk/ (repo `911Corp/garys-afk`, branch
 `main`). v1.0.0 was deployed first; v1.1.0 is the redesign below.
 
@@ -13,6 +13,9 @@ For the next agent or developer. Date: 2026-11-25. State: v1.2.0 (64 scenes), te
    Night Diner and Medieval Village were removed at the owner's request; the 34 new scenes lean on
    the universe (crypto degen, vibe coding and Jarvis, the Gary's Adventures apps, retro web).
    Sakura Valley (Japanese landscape, cherry tree) was asked for explicitly.
+   v1.3.0 adds Little Troop, an original tribute to 90s puzzle platformers asked for by the owner:
+   the critters, level art and name are original (no character or asset from an existing game).
+   The catalogue test now requires at least 8 scenes per category.
 3. **Gary appears in one scene only: Gary.exe, asleep, no speech bubbles** (the owner found the
    Gary scenes and bubbles unreadable). Touch Grass and Burger Shift were removed; The Trenches
    lost Gary; Night Diner and Lo-fi Room were added; the category is now **After Hours**.
@@ -63,7 +66,7 @@ For the next agent or developer. Date: 2026-11-25. State: v1.2.0 (64 scenes), te
 
 | Feature | Status |
 | --- | --- |
-| 64 scenes, per-scene settings, reset/restart | done, tested |
+| 65 scenes, per-scene settings, reset/restart | done, tested |
 | Catalogue: categories, search, favorites, recent, shuffle, prev/next, thumbnails | done, tested |
 | Smooth HD rendering + optional Retro pixels mode | done, tested (both modes) |
 | Player: pause, immersive, fullscreen API + fallback, auto-hide, double-tap | done, tested (fallback path on iOS not tested on a device) |

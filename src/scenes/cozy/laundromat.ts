@@ -38,7 +38,8 @@ class Laundromat extends PixelScene {
     this.drops = Array.from({ length: 70 }, () => ({ x: r(), y: r(), v: r.range(0.3, 0.7) }))
   }
   count() {
-    return Math.max(2, Math.min(6, Math.floor(this.w / (this.u * 62))))
+    const perRow = Math.max(2, Math.min(6, Math.floor(this.w / (this.u * 62))))
+    return this.h > this.w * 1.2 ? perRow * 2 : perRow
   }
   step(dt: number) {
     if (this.machines.length !== this.count()) this.layout()
@@ -108,12 +109,18 @@ class Laundromat extends PixelScene {
     for (let y = wy1 + 4 * u; y < h * 0.5; y += 6 * u) c.fillRect(0, y, w, Math.max(1, 0.3 * u))
     c.globalAlpha = 1
     // the machines
-    const n = this.machines.length
+    const rows = h > w * 1.2 ? 2 : 1
+    const n = this.machines.length / rows
     const mw = Math.min((w * 0.94) / n, 70 * u)
     const mh = mw * 1.15
-    const floor = Math.min(h * 0.92, h * 0.45 + mh + 4 * u)
+    const floor = rows === 2 ? Math.min(h * 0.94, h * 0.45 + mh * 2 + 8 * u) : Math.min(h * 0.92, h * 0.45 + mh + 4 * u)
     const x0 = (w - mw * n) / 2
-    this.machines.forEach((m, i) => this.machine(m, x0 + i * mw + mw * 0.04, floor - mh, mw * 0.92, mh))
+    this.machines.forEach((m, i) => {
+      const row = Math.floor(i / n)
+      // stacked: dryers on top of washers, like the real thing
+      const y = floor - mh * (rows - row) - (rows === 2 && row === 0 ? 2 * u : 0)
+      this.machine(m, x0 + (i % n) * mw + mw * 0.04, y, mw * 0.92, mh)
+    })
     // floor
     c.fillStyle = '#22557a'
     c.fillRect(0, floor, w, h - floor)

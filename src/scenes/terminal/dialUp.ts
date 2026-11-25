@@ -83,7 +83,7 @@ class DialUp extends PixelScene {
     const ww = Math.min(w * 0.9, fs * 56)
     const wh = Math.min(h * (portrait ? 0.5 : 0.62), fs * 30)
     const wx = (w - ww) / 2
-    const wy = portrait ? h * 0.1 : (h - wh) / 2 - fs * 2
+    const wy = portrait ? Math.max(fs, (h - wh - fs * 7) / 2) : (h - wh) / 2 - fs * 2
     this.win(wx, wy, ww, wh, this.connected ? 'Netscape - [Gary’s Homepage]' : 'Connecting to GaryNet', fs)
     const ix = wx + fs
     const iy = wy + fs * 2.6

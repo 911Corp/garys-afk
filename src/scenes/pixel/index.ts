@@ -163,4 +163,24 @@ export const pixelScenes: SceneEntry[] = [
     ],
     load: () => import('./pixelHarbor'),
   },
+  {
+    meta: {
+      id: 'little-troop',
+      name: 'Little Troop',
+      category: 'pixel',
+      description: 'A 90s-style puzzle platformer in attract mode, with an original crew: little critters in orange beanies drop from a hatch, dig, tunnel, build stairs and float down under umbrellas to reach the lantern door.',
+      version: '1.2.0',
+      render: 'pixel',
+      complexity: 2,
+      audio: ['arcade', 'wind'],
+      gary: false,
+      tags: ['platformer', '90s', 'puzzle', 'critters', 'pixel'],
+    },
+    settings: [
+      { key: 'troop', label: 'Troop size', type: 'range', min: 0.3, max: 2, step: 0.1, default: 1 },
+      { key: 'speed', label: 'Speed', type: 'range', min: 0.3, max: 3, step: 0.1, default: 1 },
+      { key: 'skills', label: 'Jobs handed out', type: 'range', min: 0.3, max: 3, step: 0.1, default: 1 },
+    ],
+    load: () => import('./littleTroop'),
+  },
 ]
