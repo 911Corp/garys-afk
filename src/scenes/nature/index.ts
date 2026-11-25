@@ -184,7 +184,7 @@ export const natureScenes: SceneEntry[] = [
       id: 'waterfall',
       name: 'Waterfall',
       category: 'nature',
-      description: 'A great waterfall seen from the plunge pool: water pours through a notch in a towering cliff, mist rolls up and jungle fronds frame the view.',
+      description: 'A pixel-art waterfall in the 16-bit tradition: colour-cycled water pours through a notch in a shaded cliff, mist rises, ferns frame the gorge.',
       version: '1.2.0',
       render: 'pixel',
       complexity: 1,

@@ -1,22 +1,25 @@
 import { PixelScene } from '../../engine/base'
 import { PALETTES as PX } from '../../engine/pixel'
-import { TAU } from '../../engine/math'
+import { TAU, rng } from '../../engine/math'
 import type { SceneContext } from '../../engine/types'
-import { glow } from '../kit'
 
 type Star = { r: number; a: number; b: number; col: string }
 
+/**
+ * Observatory, in silhouette: a long exposure of the night sky turning around the pole star, over
+ * layered hills cut flat in three tones and a black observatory whose open slit glows red.
+ */
 export function create(ctx: SceneContext) {
   return new Observatory(ctx)
 }
 
-/** An observatory on a hill, slit open: star trails slowly draw circles around the pole above the dome. */
 class Observatory extends PixelScene {
   stars: Star[] = []
   trails!: HTMLCanvasElement
   tc!: CanvasRenderingContext2D
+  hills!: HTMLCanvasElement
   angle = 0
-  slit = 0
+  meteor = { t: -1, x: 0, y: 0, a: 0 }
   constructor(ctx: SceneContext) {
     super(ctx)
     this.layout()
@@ -25,129 +28,194 @@ class Observatory extends PixelScene {
     return PX.night16
   }
   dither() {
-    return 0.35
+    return 0.25
   }
   get pole() {
-    return { x: this.w * 0.62, y: this.h * 0.12 }
+    const portrait = this.h > this.w
+    return { x: this.w * (portrait ? 0.5 : 0.6), y: this.h * (portrait ? 0.2 : 0.16) }
+  }
+  get ground() {
+    return this.h * (this.h > this.w ? 0.7 : 0.66)
   }
   layout() {
-    const { w, h } = this
-    const R = Math.hypot(w, h)
-    this.stars = Array.from({ length: Math.round(260 * this.density) }, () => ({ r: this.r() ** 0.6 * R, a: this.r() * TAU, b: this.r(), col: this.r.pick(['#f2f4ff', '#f2f4ff', '#b5d0f0', '#ffcf6a', '#ff8a5c']) }))
+    const { w, h, u } = this
+    if (!w) return
+    const R = rng(21)
+    const reach = Math.hypot(w, h)
+    this.stars = Array.from({ length: Math.round(420 * this.density) }, () => {
+      const b = R() ** 2
+      return { r: 6 * u + R() ** 0.8 * reach, a: R() * TAU, b, col: b > 0.7 ? '#ffffff' : R.pick(['#dfe8ff', '#b8ccff', '#ffd9a8', '#ffb8a0', '#cfe0ff']) }
+    })
     this.trails = document.createElement('canvas')
     this.trails.width = w
     this.trails.height = h
     this.tc = this.trails.getContext('2d')!
-    // the plate has already been exposed for a while
-    this.expose(-0.9, 0)
+    this.angle = 0
+    this.expose(-1.1, 0)
+    this.paintHills()
   }
+  /** Adds the arcs each star sweeps between two rotation angles to the exposure. */
   expose(a0: number, a1: number) {
     const tc = this.tc
     const P = this.pole
-    tc.lineWidth = Math.max(1, this.u * 0.5)
+    tc.lineCap = 'round'
     for (const s of this.stars) {
       tc.strokeStyle = s.col
-      tc.globalAlpha = 0.15 + s.b * 0.5
+      tc.globalAlpha = 0.12 + s.b * 0.75
+      tc.lineWidth = Math.max(1, this.u * (0.35 + s.b * 0.5))
       tc.beginPath()
       tc.arc(P.x, P.y, s.r, s.a + a0, s.a + a1)
       tc.stroke()
     }
     tc.globalAlpha = 1
   }
+  /** Three flat ridges, the observatory and the pines, all as solid silhouettes. */
+  paintHills() {
+    const { w, h, u } = this
+    const c0 = document.createElement('canvas')
+    c0.width = w
+    c0.height = h
+    const c = c0.getContext('2d')!
+    const G = this.ground
+    const ridge = (base: number, amp: number, f: number, ph: number, col: string) => {
+      c.fillStyle = col
+      c.beginPath()
+      c.moveTo(0, h)
+      for (let x = 0; x <= w + 4; x += 4) c.lineTo(x, base - Math.sin(x * f + ph) * amp - Math.sin(x * f * 2.7 + ph * 2) * amp * 0.3)
+      c.lineTo(w, h)
+      c.fill()
+    }
+    ridge(G - 30 * u, 14 * u, 0.004 / (u / 4), 1, '#1b2550')
+    ridge(G - 12 * u, 10 * u, 0.007 / (u / 4), 3, '#111836')
+    // the near hill carries the observatory: a smooth crest
+    const ox = w * (this.h > this.w ? 0.5 : 0.34)
+    c.fillStyle = '#070a18'
+    c.beginPath()
+    c.moveTo(0, h)
+    for (let x = 0; x <= w + 4; x += 4) {
+      const d = (x - ox) / (w * 0.55)
+      c.lineTo(x, G + d * d * 40 * u)
+    }
+    c.lineTo(w, h)
+    c.fill()
+    // pines along the crest
+    const pine = (x: number, base: number, hh: number) => {
+      c.beginPath()
+      c.moveTo(x, base - hh)
+      for (let k = 0; k <= 4; k++) {
+        const y = base - hh + (k / 4) * hh
+        const wd = (k / 4) * hh * 0.32 + hh * 0.04
+        c.lineTo(x + wd, y)
+        if (k < 4) c.lineTo(x + wd * 0.45, y + hh * 0.04)
+      }
+      c.lineTo(x - hh * 0.36, base)
+      for (let k = 4; k >= 0; k--) {
+        const y = base - hh + (k / 4) * hh
+        const wd = (k / 4) * hh * 0.32 + hh * 0.04
+        if (k < 4) c.lineTo(x - wd * 0.45, y + hh * 0.04)
+        c.lineTo(x - wd, y)
+      }
+      c.fill()
+    }
+    const R = rng(5)
+    for (let i = 0; i < 9; i++) {
+      const x = R() * w
+      if (Math.abs(x - ox) < 50 * u) continue
+      const d = (x - ox) / (w * 0.55)
+      pine(x, G + d * d * 40 * u + 2 * u, R.range(14, 30) * u)
+    }
+    // observatory: drum building, dome, slit cut by the live layer
+    const s = u
+    c.fillRect(ox - 20 * s, G - 18 * s, 40 * s, 19 * s)
+    c.beginPath()
+    c.arc(ox, G - 18 * s, 21 * s, Math.PI, 0)
+    c.fill()
+    c.fillRect(ox - 23 * s, G - 19 * s, 46 * s, 2 * s)
+    this.hills = c0
+  }
   step(dt: number) {
     const sp = this.num('speed')
     const prev = this.angle
-    this.angle += dt * 0.02 * sp
-    this.slit = Math.min(1, this.slit + dt * 0.15)
+    this.angle += dt * 0.012 * sp
     this.expose(prev, this.angle)
-    // after a long exposure, the plate is wiped and starts again
-    if (this.angle > 1.6) {
-      this.angle = 0
+    if (this.angle > 1.4) {
+      // a new plate: wipe and start a fresh exposure
       this.tc.clearRect(0, 0, this.w, this.h)
+      this.angle = 0
+      this.expose(-0.4, 0)
+    }
+    if (this.meteor.t < 0 && this.r.chance(dt / 14)) this.meteor = { t: 0, x: this.r.range(0.1, 0.9) * this.w, y: this.r.range(0.05, 0.35) * this.h, a: this.r.range(0.3, 0.8) }
+    if (this.meteor.t >= 0) {
+      this.meteor.t += dt * 1.6
+      if (this.meteor.t > 1) this.meteor.t = -1
     }
   }
   draw() {
     const c = this.c
     const { w, h, u } = this
-    const sky = c.createLinearGradient(0, 0, 0, h)
-    sky.addColorStop(0, '#05060d')
-    sky.addColorStop(0.75, '#16244a')
-    sky.addColorStop(1, '#24407a')
+    const G = this.ground
+    // deep gradient sky with a cool glow along the horizon
+    const sky = c.createLinearGradient(0, 0, 0, G)
+    sky.addColorStop(0, '#03040c')
+    sky.addColorStop(0.55, '#0b1230')
+    sky.addColorStop(0.85, '#1c2b5c')
+    sky.addColorStop(1, '#2f4a7a')
     c.fillStyle = sky
     c.fillRect(0, 0, w, h)
-    // a faint band of the galaxy
-    c.save()
-    c.translate(w / 2, h / 2)
-    c.rotate(-0.5)
-    const band = c.createLinearGradient(0, -h * 0.15, 0, h * 0.15)
-    band.addColorStop(0, 'rgba(181,208,240,0)')
-    band.addColorStop(0.5, 'rgba(181,208,240,0.12)')
-    band.addColorStop(1, 'rgba(181,208,240,0)')
-    c.fillStyle = band
-    c.fillRect(-w, -h * 0.15, w * 2, h * 0.3)
-    c.restore()
     c.drawImage(this.trails, 0, 0)
-    // current star positions
+    // the pole star, steady and bright
     const P = this.pole
-    for (const s of this.stars) {
-      c.fillStyle = s.col
-      c.fillRect(P.x + Math.cos(s.a + this.angle) * s.r, P.y + Math.sin(s.a + this.angle) * s.r, Math.max(1, 0.8 * u), Math.max(1, 0.8 * u))
+    const pg = c.createRadialGradient(P.x, P.y, 0, P.x, P.y, 6 * u)
+    pg.addColorStop(0, 'rgba(255,255,255,0.95)')
+    pg.addColorStop(1, 'rgba(255,255,255,0)')
+    c.fillStyle = pg
+    c.fillRect(P.x - 6 * u, P.y - 6 * u, 12 * u, 12 * u)
+    // shooting star
+    if (this.meteor.t >= 0) {
+      const m = this.meteor
+      const len = 60 * u
+      const hx = m.x + Math.cos(m.a) * len * m.t * 2
+      const hy = m.y + Math.sin(m.a) * len * m.t * 2
+      const g = c.createLinearGradient(hx - Math.cos(m.a) * len, hy - Math.sin(m.a) * len, hx, hy)
+      g.addColorStop(0, 'rgba(255,255,255,0)')
+      g.addColorStop(1, `rgba(255,255,255,${1 - m.t})`)
+      c.strokeStyle = g
+      c.lineWidth = Math.max(1, 0.8 * u)
+      c.beginPath()
+      c.moveTo(hx - Math.cos(m.a) * len, hy - Math.sin(m.a) * len)
+      c.lineTo(hx, hy)
+      c.stroke()
     }
-    // hill and the observatory
-    const hillY = h * 0.78
-    c.fillStyle = '#0b0f1e'
+    c.drawImage(this.hills, 0, 0)
+    // the slit: a red-lit opening in the black dome, with the telescope tube inside
+    const ox = w * (this.h > this.w ? 0.5 : 0.34)
+    const s = u
+    const sw = 5 * s
+    const slitTop = G - 38 * s
+    c.save()
     c.beginPath()
-    c.moveTo(0, h)
-    c.lineTo(0, hillY + 12 * u)
-    c.quadraticCurveTo(w * 0.35, hillY - 16 * u, w * 0.7, hillY + 4 * u)
-    c.quadraticCurveTo(w * 0.9, hillY + 12 * u, w, hillY + 6 * u)
-    c.lineTo(w, h)
-    c.fill()
-    const s = Math.min(w, h) / 180
-    const ox = w * 0.35
-    const oy = hillY - 6 * u
-    // building
-    c.fillStyle = '#e6ecf4'
-    c.fillRect(ox - 22 * s, oy - 20 * s, 44 * s, 20 * s)
-    c.fillStyle = '#b9c3e6'
-    c.fillRect(ox - 22 * s, oy - 20 * s, 44 * s, 2 * s)
-    // red night light from the door
-    c.fillStyle = '#7a1f2a'
-    c.fillRect(ox + 8 * s, oy - 11 * s, 6 * s, 11 * s)
-    glow(c, ox + 11 * s, oy - 3 * s, 14 * s, 'rgba(255,60,60,0.3)')
-    // dome with the slit open
-    c.fillStyle = '#d0d8ea'
-    c.beginPath()
-    c.arc(ox, oy - 20 * s, 24 * s, Math.PI, 0)
-    c.fill()
-    const sw = 6 * s * this.slit
-    c.fillStyle = '#05060d'
-    c.beginPath()
-    c.moveTo(ox - sw / 2, oy - 20 * s)
-    c.lineTo(ox - sw / 2 + 4 * s, oy - 43 * s)
-    c.lineTo(ox + sw / 2 + 4 * s, oy - 43 * s)
-    c.lineTo(ox + sw / 2, oy - 20 * s)
-    c.fill()
-    // the telescope inside, tracking slowly
-    const ta = -1.15 + Math.sin(this.t * 0.03) * 0.05
-    c.strokeStyle = '#8a92b8'
+    c.arc(ox, G - 18 * s, 21 * s, Math.PI, 0)
+    c.clip()
+    const lg = c.createLinearGradient(0, slitTop, 0, G - 18 * s)
+    lg.addColorStop(0, '#3a0a12')
+    lg.addColorStop(1, '#9a1e24')
+    c.fillStyle = lg
+    c.fillRect(ox - sw / 2 + 3 * s, slitTop - 2 * s, sw, 22 * s)
+    c.strokeStyle = '#03040c'
     c.lineWidth = 3 * s
     c.beginPath()
-    c.moveTo(ox + 1 * s, oy - 24 * s)
-    c.lineTo(ox + 1 * s + Math.cos(ta) * 16 * s, oy - 24 * s + Math.sin(ta) * 16 * s)
+    const ta = -1.25 + Math.sin(this.t * 0.02) * 0.04
+    c.moveTo(ox + 3 * s, G - 22 * s)
+    c.lineTo(ox + 3 * s + Math.cos(ta) * 18 * s, G - 22 * s + Math.sin(ta) * 18 * s)
     c.stroke()
-    glow(c, ox + 2 * s, oy - 30 * s, 8 * s, 'rgba(255,60,60,0.35)')
-    c.strokeStyle = '#8a92b8'
-    c.lineWidth = Math.max(1, 0.5 * s)
-    c.beginPath()
-    c.arc(ox, oy - 20 * s, 24 * s, Math.PI, 0)
-    c.stroke()
-    // a small tree beside it
-    c.fillStyle = '#05060d'
-    c.beginPath()
-    c.moveTo(ox + 42 * s, oy)
-    c.lineTo(ox + 48 * s, oy - 26 * s)
-    c.lineTo(ox + 54 * s, oy)
-    c.fill()
+    c.restore()
+    // a little red door light at the base
+    c.fillStyle = '#c8262e'
+    c.fillRect(ox + 9 * s, G - 9 * s, 4 * s, 8 * s)
+    const dg = c.createRadialGradient(ox + 11 * s, G - 4 * s, 0, ox + 11 * s, G - 4 * s, 16 * s)
+    dg.addColorStop(0, 'rgba(200,38,46,0.35)')
+    dg.addColorStop(1, 'rgba(200,38,46,0)')
+    c.fillStyle = dg
+    c.fillRect(ox - 8 * s, G - 22 * s, 38 * s, 30 * s)
   }
 }
