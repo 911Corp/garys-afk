@@ -32,7 +32,7 @@ export function create(ctx: SceneContext) {
 
 /**
  * A great waterfall seen from the plunge pool: water pours through a notch in a towering cliff,
- * strikes the pool and throws up rolling mist with a rainbow; jungle fronds frame the view.
+ * strikes the pool and throws up rolling mist; jungle fronds frame the view.
  * Every element is placed from one geometry (this.G), computed in layout().
  */
 class Waterfall extends PixelScene {
@@ -412,18 +412,6 @@ class Waterfall extends PixelScene {
       c.beginPath()
       c.ellipse(x, y, (5 + (i % 4) * 2) * u, 2.5 * u, 0, 0, TAU)
       c.fill()
-    }
-    // rainbow through the mist (not at night)
-    if (this.bool('rainbow') && !L.moon) {
-      const cols = ['255,90,90', '255,170,80', '255,235,110', '120,220,110', '90,170,255', '160,120,255']
-      const rr = G.fw * 1.5
-      cols.forEach((col, i) => {
-        c.strokeStyle = `rgba(${col},0.22)`
-        c.lineWidth = 2.2 * u
-        c.beginPath()
-        c.arc(G.cx + G.fw * 0.35, bot + G.fw * 0.2, rr - i * 2.2 * u, Math.PI * 1.08, Math.PI * 1.62)
-        c.stroke()
-      })
     }
     // a low band of mist over the pool
     const band = c.createLinearGradient(0, bot - G.fw * 0.9, 0, bot + 8 * u)

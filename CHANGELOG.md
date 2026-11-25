@@ -9,7 +9,7 @@
 
 ### Changed
 - **Waterfall** rebuilt: a great fall through a notch in a towering cliff, seen from the plunge
-  pool, with rolling mist, light shafts, a rainbow, vines, birds and jungle fronds framing the view.
+  pool, with rolling mist, light shafts, vines, birds and jungle fronds framing the view.
   New **Light** setting: day, golden hour, moonlight. Every element is placed from one geometry.
 - **Pop-up Storm** redrawn the old-desktop way: pixel-art desktop icons (computer, recycle bin,
   folder, text file, app), bevelled windows and buttons with a focus ring, the classic message
