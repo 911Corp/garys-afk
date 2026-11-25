@@ -273,6 +273,6 @@ class Trenches extends WorldScene {
     c.font = '11px "IBM Plex Mono", monospace'
     c.fillStyle = 'rgba(140,160,200,0.6)'
     c.textAlign = 'right'
-    c.fillText('simulated data. not financial advice.', 944, 496)
+    c.fillText('not financial advice. neither is gary.', 944, 496)
   }
 }

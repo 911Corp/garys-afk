@@ -95,7 +95,7 @@ export const pixelScenes: SceneEntry[] = [
       id: 'degen-casino',
       name: 'Degen Casino',
       category: 'pixel',
-      description: 'A neon casino where the slot machines pay out in fictional memecoins. Mostly they rug.',
+      description: 'A neon casino where the slot machines pay out in memecoins. Mostly they rug.',
       version: '1.2.0',
       render: 'pixel',
       complexity: 1,

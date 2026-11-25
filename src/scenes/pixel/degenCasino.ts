@@ -111,7 +111,7 @@ class DegenCasino extends PixelScene {
     c.fillText('DEGEN CASINO', w / 2, sy)
     font(c, fs * 0.4, MONO, 500)
     c.fillStyle = '#9af5ff'
-    c.fillText('fictional coins only  ·  the house always rugs', w / 2, sy + fs * 0.8)
+    c.fillText('the house always rugs', w / 2, sy + fs * 0.8)
     // carpet
     const floor = h * 0.86
     c.fillStyle = '#3e2a7a'

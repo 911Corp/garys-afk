@@ -101,7 +101,7 @@ class MiningFarm extends PixelScene {
     c.fillStyle = '#3ef07f'
     c.fillText(`HASHRATE ${this.hash.toFixed(1)} MH/s`, fs, top * 0.35)
     c.fillStyle = '#6b7a99'
-    c.fillText(`BLOCK #${this.block}   fictional farm`, fs, top * 0.7)
+    c.fillText(`BLOCK #${this.block}`, fs, top * 0.7)
     c.textAlign = 'right'
     c.fillStyle = '#ffc83d'
     c.fillText(`POWER ${(this.hash * 2.31).toFixed(0)} W`, w - fs, top * 0.35)

@@ -150,7 +150,7 @@ class WhaleRadar extends PixelScene {
     font(c, fs, MONO, 600)
     c.fillStyle = '#4cff7a'
     c.textBaseline = 'top'
-    c.fillText('WHALE WATCH  //  fictional wallets', lx, ly)
+    c.fillText('WHALE WATCH', lx, ly)
     c.fillStyle = '#1f8a3c'
     c.fillRect(lx, ly + fs * 1.6, lw, Math.max(1, 0.4 * u))
     font(c, fs, MONO, 400)

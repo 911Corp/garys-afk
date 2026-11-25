@@ -7,7 +7,7 @@ import type { SceneContext } from '../../engine/types'
 const SESSIONS: string[][] = [
   ['$ cd ~/garys-afk', '$ npm run build', '> tsc -b && vite build', 'transforming...', '{bar} 412 modules transformed', 'dist/index.html      1.2 kB', 'dist/assets/app.js 184.6 kB', 'built in 2.41s'],
   ['$ git status', 'On branch main', "Your branch is ahead of 'origin/main' by 37 commits.", 'Changes not staged for commit:', '  modified:   everything', '$ git commit -am "fix"', '[main 4f0e404] fix', ' 69 files changed, 420 insertions(+), 1337 deletions(-)'],
-  ['$ ./scan --deep ~/bags', 'scanning wallets (simulated)...', '{bar} 3 of 3 bags checked', 'bag #1: heavy', 'bag #2: heavier', 'bag #3: do not look', 'verdict: ngmi'],
+  ['$ ./scan --deep ~/bags', 'scanning wallets...', '{bar} 3 of 3 bags checked', 'bag #1: heavy', 'bag #2: heavier', 'bag #3: do not look', 'verdict: ngmi'],
   ['$ ping moon', 'PING moon (384.4 Mm): 56 data bytes', 'Request timeout for icmp_seq 0', 'Request timeout for icmp_seq 1', 'Request timeout for icmp_seq 2', '--- moon ping statistics ---', '3 packets transmitted, 0 received, 100% packet loss'],
   ['$ jarvis --status', 'jarvis v4.0.4 :: online', 'uptime: 404 days', 'tasks: 12 queued, 0 failed', 'gary: afk', 'mood: patient'],
   ['$ npm audit', 'found 3 vulnerabilities (1 low, 2 "it depends")', '$ npm audit fix --force', '{bar} rewriting history', 'fixed 3 vulnerabilities', 'introduced 7 new ones', 'jarvis: reverting.'],

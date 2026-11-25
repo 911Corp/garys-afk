@@ -186,7 +186,7 @@ class ToTheMoon extends PixelScene {
     c.stroke()
     c.fillStyle = '#6a95d4'
     font(c, fs * 0.8, MONO, 500)
-    c.fillText('$WENMOON  fictional', cx + 3 * u, cy + chh + 2 * u)
+    c.fillText('$WENMOON', cx + 3 * u, cy + chh + 2 * u)
     c.textBaseline = 'alphabetic'
   }
   rocket(x: number, y: number, s: number) {

@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.3.1 (2026-11-25)
+
+### Changed
+- On-screen "fictional" / "simulated" notes removed from the scenes and their descriptions (Purity
+  Scanner, Whale Radar, Degen Casino, Mining Farm, To the Moon, The Trenches, Terminal 404, Packet
+  Flow, Pirate Radio): the joke works better unexplained. Gary's signature stays: "Not financial
+  advice. Neither is Gary." Tickers and data remain invented.
+
 ## 1.3.0 (2026-11-25)
 
 75 scenes.

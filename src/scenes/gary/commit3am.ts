@@ -7,7 +7,7 @@ const FILES: { name: string; msg: string; code: string }[] = [
   {
     name: 'rugCheck.ts',
     msg: 'feat: rug check v2',
-    code: `// fictional scores, not financial advice
+    code: `// not financial advice. neither is gary
 export function rugCheck(token: Token): Verdict {
   const flags = scan(token)
   if (flags.mintAuthority) return 'SCAM'

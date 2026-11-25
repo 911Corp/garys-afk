@@ -161,7 +161,7 @@ class PurityScanner extends PixelScene {
     })
     font(c, Math.max(7, fs * 0.85), MONO, 400)
     c.fillStyle = '#3a4760'
-    c.fillText('Fictional tokens. Not financial advice. Neither is Gary.', cx, h - fs * 1.2)
+    c.fillText('Not financial advice. Neither is Gary.', cx, h - fs * 1.2)
     c.textAlign = 'left'
     c.textBaseline = 'alphabetic'
   }
