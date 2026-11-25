@@ -92,5 +92,8 @@ clipping when layers stack. The AudioContext is created only after a click or ke
 
 `vite.config.ts` emits `sw.js` at build time with a versioned cache name and the full list of build
 and public files. The worker precaches everything on install (file by file, so one failure does not
-break the install), serves cache-first, and deletes old caches on activate. Full offline use needs
+break the install) and takes over at once (`skipWaiting`). The page itself is network-first, so a
+new deployment shows up immediately; hashed assets are cache-first. Old caches are deleted on
+activate, and the page reloads once when a new worker takes control. The browser checks for a new
+worker on each visit and when the app comes back to the foreground. Full offline use needs
 one online visit first.

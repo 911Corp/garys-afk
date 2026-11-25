@@ -11,7 +11,22 @@ const m = location.hash.match(/^#\/render\/([\w-]+)/)
 createRoot(document.getElementById('root')!).render(m ? <RenderOnly id={m[1]} /> : <App />)
 
 if ('serviceWorker' in navigator && import.meta.env.PROD && !m) {
-  const register = () => navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).catch((e) => console.warn('Offline mode unavailable:', e))
+  const register = () =>
+    navigator.serviceWorker
+      .register(`${import.meta.env.BASE_URL}sw.js`, { updateViaCache: 'none' })
+      .then((reg) => {
+        // check for a new version when the app comes back to the foreground
+        document.addEventListener('visibilitychange', () => document.visibilityState === 'visible' && reg.update().catch(() => undefined))
+      })
+      .catch((e) => console.warn('Offline mode unavailable:', e))
+  // when a new version takes control, reload once so the page matches it
+  let reloaded = false
+  const hadController = !!navigator.serviceWorker.controller
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadController || reloaded) return
+    reloaded = true
+    location.reload()
+  })
   if (document.readyState === 'complete') register()
   else window.addEventListener('load', register)
 }

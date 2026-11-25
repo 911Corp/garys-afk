@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.1 (2026-11-25)
+
+### Fixed
+- Updates now reach phones and installed apps right away. The service worker used to serve the
+  cached page first and wait for every tab to close before switching, so the previous version could
+  stay on screen. The page is now fetched from the network first (the cache is only the offline
+  fallback), a new worker takes over immediately, and the page reloads once when it does.
+
 ## 1.1.0 (2026-11-25)
 
 ### Changed

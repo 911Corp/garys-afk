@@ -10,6 +10,8 @@ self.addEventListener('install', (event) => {
       Promise.all(FILES.map((f) => cache.add(new Request(f, { cache: 'reload' })).catch(() => undefined))),
     ),
   )
+  // a new version takes over right away instead of waiting for every tab to close
+  self.skipWaiting()
 })
 
 self.addEventListener('message', (event) => {
@@ -31,6 +33,22 @@ self.addEventListener('fetch', (event) => {
   if (req.method !== 'GET') return
   const url = new URL(req.url)
   if (url.origin !== self.location.origin) return
+  // the page itself: network first, so a new deployment shows up at once; the cache is the offline fallback
+  if (req.mode === 'navigate') {
+    event.respondWith(
+      fetch(req, { cache: 'no-store' })
+        .then((res) => {
+          if (res.ok) {
+            const copy = res.clone()
+            caches.open(CACHE).then((c) => c.put('./', copy))
+          }
+          return res
+        })
+        .catch(() => caches.match('./', { ignoreVary: true }).then((hit) => hit || Response.error())),
+    )
+    return
+  }
+  // hashed assets never change: cache first
   event.respondWith(
     caches.match(req, { ignoreSearch: true, ignoreVary: true }).then(
       (hit) =>
