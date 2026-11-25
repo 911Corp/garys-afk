@@ -1,6 +1,6 @@
-# HANDOFF: Gary's AFK v1.1.0
+# HANDOFF: Gary's AFK v1.2.0
 
-For the next agent or developer. Date: 2026-11-25. State: v1.1.0, tested in headless Chrome.
+For the next agent or developer. Date: 2026-11-25. State: v1.2.0 (64 scenes), tested in headless Chrome.
 **Live on GitHub Pages**: https://911corp.github.io/garys-afk/ (repo `911Corp/garys-afk`, branch
 `main`). v1.0.0 was deployed first; v1.1.0 is the redesign below.
 
@@ -9,7 +9,10 @@ For the next agent or developer. Date: 2026-11-25. State: v1.1.0, tested in head
 1. **v1.1 visual direction = the owner's reference screens** (the earlier prototype's look): IBM
    Plex Mono, rounded thin frames, mint accent, big centred clock, smooth sharp scenes. The v1.0
    pixel-art rendering stays as the optional "Retro pixels" display setting.
-2. **All 32 scenes kept**, 4 per category, each with its own renderer and real settings.
+2. **64 scenes since v1.2.0**, 8 per category, each with its own renderer and real settings.
+   Night Diner and Medieval Village were removed at the owner's request; the 34 new scenes lean on
+   the universe (crypto degen, vibe coding and Jarvis, the Gary's Adventures apps, retro web).
+   Sakura Valley (Japanese landscape, cherry tree) was asked for explicitly.
 3. **Gary appears in one scene only: Gary.exe, asleep, no speech bubbles** (the owner found the
    Gary scenes and bubbles unreadable). Touch Grass and Burger Shift were removed; The Trenches
    lost Gary; Night Diner and Lo-fi Room were added; the category is now **After Hours**.
@@ -23,7 +26,7 @@ For the next agent or developer. Date: 2026-11-25. State: v1.1.0, tested in head
 6. **Jarvis** has no official visual: he appears as text only (Gary.exe monitor log, Terminal 404).
 7. **Handoff ZIP from the owner** (HANDOFF.md, SCENES.csv, visual search links) was read and
    applied: green phosphor by default in Terminal 404, NGMI logo by default in DVD Survivor,
-   Medieval Village at dusk by default.
+   Medieval Village at dusk by default (Medieval Village was removed in v1.2.0).
 8. **"Flying Toasters" renamed "Flying Floppies"**, original sprites, as the brief allowed.
 9. **The Trenches** is now an empty desk with red/green simulated charts, as the catalogue notes said.
 10. **Sound is 100% synthesised** (Web Audio): no audio files, nothing to license, no loop seams.
@@ -60,7 +63,7 @@ For the next agent or developer. Date: 2026-11-25. State: v1.1.0, tested in head
 
 | Feature | Status |
 | --- | --- |
-| 32 scenes, per-scene settings, reset/restart | done, tested |
+| 64 scenes, per-scene settings, reset/restart | done, tested |
 | Catalogue: categories, search, favorites, recent, shuffle, prev/next, thumbnails | done, tested |
 | Smooth HD rendering + optional Retro pixels mode | done, tested (both modes) |
 | Player: pause, immersive, fullscreen API + fallback, auto-hide, double-tap | done, tested (fallback path on iOS not tested on a device) |

@@ -26,6 +26,12 @@ export const PALETTES = {
   phosphor: ['#020a04', '#0b3a16', '#1f8a3c', '#4cff7a', '#c8ffd6'],
   mono: ['#0b0b0c', '#3a3a3e', '#8a8a90', '#e8e8e8'],
   ega: ['#000000', '#0000aa', '#00aa00', '#00aaaa', '#aa0000', '#aa00aa', '#aa5500', '#aaaaaa', '#555555', '#5555ff', '#55ff55', '#55ffff', '#ff5555', '#ff55ff', '#ffff55', '#ffffff'],
+  /** Spring in Japan: blossom pinks, vermilion, misty blues, pine greens. */
+  sakura: ['#0e0d1c', '#232245', '#3d3f6e', '#6a6f9e', '#a9b4d4', '#e6ecf4', '#fff7f8', '#ffd3df', '#f59ab4', '#d9668a', '#c8402e', '#7a2a24', '#2c3b2c', '#4c6b47', '#ffcf73', '#8a6a5a'],
+  /** Candles, chart screens and dark rooms. */
+  degen: ['#050608', '#0d1117', '#161b26', '#232c3d', '#3a4760', '#6b7a99', '#c4cee0', '#ffffff', '#0e3b22', '#1f8f4e', '#3ef07f', '#5a1520', '#b8263b', '#ff4d64', '#ffc83d', '#a77bff'],
+  /** Early web: grey windows, link blue, visited purple, starfield black. */
+  web: ['#000000', '#1a1a2e', '#000080', '#0000ff', '#5a8cff', '#008080', '#00c0c0', '#800080', '#ff00ff', '#c0c0c0', '#808080', '#ffffff', '#ffff00', '#ff0000', '#00ff00', '#ff8000'],
 } satisfies Record<string, Palette>
 export type PaletteId = keyof typeof PALETTES
 

@@ -4,10 +4,10 @@ import { defaultSettings, sanitizeSettings } from '../../src/engine/types'
 import { CATEGORIES, SCENES } from '../../src/scenes/registry'
 
 describe('scene catalogue', () => {
-  it('has 32 scenes, 4 per category, unique stable ids', () => {
-    expect(SCENES).toHaveLength(32)
-    expect(new Set(SCENES.map((s) => s.meta.id)).size).toBe(32)
-    for (const c of CATEGORIES) expect(SCENES.filter((s) => s.meta.category === c.id)).toHaveLength(4)
+  it('has 64 scenes, 8 per category, unique stable ids', () => {
+    expect(SCENES).toHaveLength(64)
+    expect(new Set(SCENES.map((s) => s.meta.id)).size).toBe(64)
+    for (const c of CATEGORIES) expect(SCENES.filter((s) => s.meta.category === c.id)).toHaveLength(8)
   })
   it('every scene has a real thumbnail, a description, an ambience and valid defaults', () => {
     for (const s of SCENES) {
@@ -25,6 +25,12 @@ describe('scene catalogue', () => {
   })
   it('Gary appears in one scene only: Gary.exe, asleep', () => {
     expect(SCENES.filter((s) => s.meta.gary).map((s) => s.meta.id)).toEqual(['gary-exe'])
+  })
+  it('the two scenes judged dull in v1.1 are gone', () => {
+    const ids = SCENES.map((s) => s.meta.id)
+    expect(ids).not.toContain('night-diner')
+    expect(ids).not.toContain('medieval-village')
+    expect(ids).toContain('sakura-valley')
   })
   it('scenes that can flash say so', () => {
     expect(SCENES.filter((s) => s.meta.flashes).map((s) => s.meta.id).sort()).toEqual(['rainy-night', 'thunderstorm'])

@@ -1,5 +1,28 @@
 # Changelog
 
+## 1.2.0 (2026-11-25)
+
+### Changed
+- The catalogue doubles: **64 scenes**, 8 per category.
+- Removed Night Diner and Medieval Village (judged dull by the owner).
+
+### Added, with references to the Gary's Adventures universe
+- After Hours: **Friday Deploy** (a CI pipeline at 16:59 on a Friday), **Jarvis Core** (Gary's
+  assistant thinking), **Merge Conflict** (an endless git graph), **3AM Commit** (code that writes
+  itself, Jarvis suggestions), **Anomaly Archive** (classified files from the Weird Web).
+- Terminal & Hacker: **Whale Radar**, **Purity Scanner** (the Purity-o-Meter dial, Pure to SCAM),
+  **Dial-Up 56k**, **Chat Room 1999**.
+- Retro Screensavers: **Mystify**, **3D Text** (NGMI, WAGMI, GM...), **Under Construction**,
+  **Pop-up Storm** (fake airdrops until Jarvis closes them all).
+- Pixel Worlds: **NGMI Runner** (attract mode of the NGMI game, a $NGMI coin jumping rugs),
+  **Degen Casino**, **Cyber Café 2003**, **Retro Racer**, **Pixel Harbor**.
+- Space: **To the Moon**, **Orbit Station**, **Asteroid Drift**, **Lunar Base**.
+- Nature: **Sakura Valley** (Japanese landscape with a great cherry tree, asked for by the owner),
+  **Desert Dunes**, **Volcano**, **Waterfall**.
+- Cozy: **Lava Lamp**, **Koi Pond**, **Bonsai Seasons**, **Laundromat**.
+- Generative: **Reaction Diffusion**, **Spirograph**, **Murmuration**, **L-System Garden**.
+- Gary still appears in Gary.exe only. All tickers, wallets and balances are fictional.
+
 ## 1.1.1 (2026-11-25)
 
 ### Fixed

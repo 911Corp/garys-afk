@@ -96,7 +96,7 @@ try {
   ok('picking a card switches scene', (await page.locator('.scene-title strong').textContent()) === 'Fireplace')
 
   await page.getByRole('tab', { name: 'Space' }).click()
-  ok('category filter', (await page.locator('.card').count()) === 4)
+  ok('category filter', (await page.locator('.card').count()) === 8)
   await page.getByRole('tab', { name: 'All' }).click()
   await page.fill('.search', 'rain')
   const found = await page.locator('.card .card-name').allTextContents()

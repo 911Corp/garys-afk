@@ -31,7 +31,7 @@ vite, @vitejs/plugin-react, typescript, vitest, oxlint, playwright (all MIT or A
 | --- | --- | --- |
 | Gary (Gary.exe, asleep) | Canonical drawing code of the Purity-o-Meter (`gary()`, `ln`, `blob`, `dot`), ported in `src/engine/gary/kit.ts` | Gary's Adventures. Not covered by the MIT licence. |
 | Jarvis | Text only (log lines, voice). No official visual exists yet. | Gary's Adventures |
-| Scene art (32 scenes) | Procedural, written for this project | MIT (code) |
+| Scene art (64 scenes) | Procedural, written for this project | MIT (code) |
 | Pixel sprites (floppies, monitors, wings, deer, villagers) | Hand-written character maps in the scene files, made for this project | MIT |
 | Palettes | Hand-picked colour lists in `src/engine/pixel.ts`. The EGA list reproduces the standard 16-colour hardware palette (a technical fact, not a creative work). | MIT |
 | Ambient sounds (14 ambiences, thunder, chime) | Synthesised in `src/engine/audio/audio.ts` | MIT |
@@ -42,6 +42,6 @@ vite, @vitejs/plugin-react, typescript, vitest, oxlint, playwright (all MIT or A
 
 "Flying Toasters" from the catalogue brief was renamed **Flying Floppies**, with original sprites
 (floppy disks and CRT monitors with wings), to avoid any confusion with an existing screensaver.
-The DVD Survivor logo is an original NGMI / Gary's AFK wordmark; no DVD logo is used. Night Diner and
-Lo-fi Room are original illustrations drawn in code. The Arcade
+The DVD Survivor logo is an original NGMI / Gary's AFK wordmark; no DVD logo is used. Lo-fi Room and
+every v1.2 scene are original illustrations drawn in code; tickers ($NGMI, $WENMOON...) are invented. The Arcade
 Room games (Pongo, Blob Wars, Snek, Night Run, Bricker) are original mini-animations.

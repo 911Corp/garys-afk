@@ -13,18 +13,20 @@ Free. No account, no ads, no wallet, no tracking, no server. Everything stays in
 
 ## What's inside
 
-32 animated scenes in 8 categories, each with its own renderer and settings:
+64 animated scenes in 8 categories, each with its own renderer and settings:
 
 | Category | Scenes |
 | --- | --- |
-| After Hours | Gary.exe · The Trenches · Night Diner · Lo-fi Room |
-| Terminal & Hacker | Terminal 404 · Digital Rain · Mainframe · Packet Flow |
-| Cozy & Relax | Fireplace · Rainy Night · Snow Cabin · Aquarium |
-| Space & Cosmos | Starfield · Black Hole · Solar System · Nebula |
-| Retro Screensavers | DVD Survivor · 3D Pipes · Endless Maze · Flying Floppies |
-| Nature & Landscapes | Ocean Waves · Forest Life · Northern Lights · Thunderstorm |
-| Pixel Worlds | Neon City · Night Train · Medieval Village · Arcade Room |
-| Generative Art | Game of Life · Fractal Explorer · Flow Field · Kaleidoscope |
+| After Hours | Gary.exe · The Trenches · Lo-fi Room · Friday Deploy · Jarvis Core · Merge Conflict · 3AM Commit · Anomaly Archive |
+| Terminal & Hacker | Terminal 404 · Digital Rain · Mainframe · Packet Flow · Whale Radar · Purity Scanner · Dial-Up 56k · Chat Room 1999 |
+| Cozy & Relax | Fireplace · Rainy Night · Snow Cabin · Aquarium · Lava Lamp · Koi Pond · Bonsai Seasons · Laundromat |
+| Space & Cosmos | Starfield · Black Hole · Solar System · Nebula · To the Moon · Orbit Station · Asteroid Drift · Lunar Base |
+| Retro Screensavers | DVD Survivor · 3D Pipes · Endless Maze · Flying Floppies · Mystify · 3D Text · Under Construction · Pop-up Storm |
+| Nature & Landscapes | Ocean Waves · Forest Life · Northern Lights · Thunderstorm · Sakura Valley · Desert Dunes · Volcano · Waterfall |
+| Pixel Worlds | Neon City · Night Train · Arcade Room · NGMI Runner · Degen Casino · Cyber Café 2003 · Retro Racer · Pixel Harbor |
+| Generative Art | Game of Life · Fractal Explorer · Flow Field · Kaleidoscope · Reaction Diffusion · Spirograph · Murmuration · L-System Garden |
+
+Crypto tickers, wallets, balances and verdicts shown in scenes are fictional. Not financial advice.
 
 Scenes render sharp and smooth at your screen's resolution. Turn on **Retro pixels** in Display to
 get the 8/16-bit look instead: a ~320×180 buffer, limited palettes and ordered dithering. Gary
