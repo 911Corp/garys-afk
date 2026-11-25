@@ -1,0 +1,106 @@
+import type { SceneEntry } from '../../engine/types'
+
+export const pixelScenes: SceneEntry[] = [
+  {
+    meta: {
+      id: 'neon-city',
+      name: 'Neon City',
+      category: 'pixel',
+      description: 'A 16-bit city at night: parallax skyline, flickering neon signs, traffic on a wet street.',
+      version: '1.0.0',
+      render: 'pixel',
+      complexity: 1,
+      audio: ['rain', 'brown'],
+      gary: false,
+      tags: ['city', 'neon', 'night', 'cars'],
+    },
+    settings: [
+      { key: 'traffic', label: 'Traffic', type: 'range', min: 0, max: 3, step: 0.1, default: 1 },
+      { key: 'pan', label: 'Camera pan', type: 'range', min: 0, max: 3, step: 0.1, default: 1 },
+      { key: 'rain', label: 'Rain', type: 'toggle', default: true },
+    ],
+    load: () => import('./neonCity'),
+  },
+  {
+    meta: {
+      id: 'night-train',
+      name: 'Night Train',
+      category: 'pixel',
+      description: 'From a lit compartment, the night landscape slides past in layers: hills, villages, poles and wires.',
+      version: '1.0.0',
+      render: 'pixel',
+      complexity: 1,
+      audio: ['train'],
+      gary: false,
+      tags: ['train', 'travel', 'night', 'parallax'],
+    },
+    settings: [
+      { key: 'speed', label: 'Speed', type: 'range', min: 0.2, max: 3, step: 0.1, default: 1 },
+      {
+        key: 'scenery',
+        label: 'Scenery',
+        type: 'select',
+        options: [
+          { value: 'country', label: 'Countryside' },
+          { value: 'coast', label: 'Coast' },
+          { value: 'snow', label: 'Snow' },
+        ],
+        default: 'country',
+      },
+      { key: 'lamp', label: 'Compartment lamp', type: 'toggle', default: true },
+    ],
+    load: () => import('./nightTrain'),
+  },
+  {
+    meta: {
+      id: 'medieval-village',
+      name: 'Medieval Village',
+      category: 'pixel',
+      description: 'A village at dusk: a turning windmill, smithy sparks, chimney smoke, villagers on the road, a river.',
+      version: '1.0.0',
+      render: 'pixel',
+      complexity: 1,
+      audio: ['wind', 'night'],
+      gary: false,
+      tags: ['village', 'windmill', 'people', 'dusk'],
+    },
+    settings: [
+      {
+        key: 'time',
+        label: 'Time of day',
+        type: 'select',
+        options: [
+          { value: 'dusk', label: 'Dusk' },
+          { value: 'cycle', label: 'Day/night cycle' },
+          { value: 'day', label: 'Day' },
+          { value: 'night', label: 'Night' },
+        ],
+        default: 'dusk',
+      },
+      { key: 'cycle', label: 'Cycle length', type: 'range', min: 1, max: 20, step: 1, default: 5, unit: 'min' },
+      { key: 'villagers', label: 'Villagers', type: 'range', min: 0, max: 14, step: 1, default: 6 },
+      { key: 'wind', label: 'Wind', type: 'range', min: 0, max: 3, step: 0.1, default: 1 },
+    ],
+    load: () => import('./medievalVillage'),
+  },
+  {
+    meta: {
+      id: 'arcade-room',
+      name: 'Arcade Room',
+      category: 'pixel',
+      description: 'Cabinets in attract mode, each playing its own tiny original game, on a cosmic carpet.',
+      version: '1.0.0',
+      render: 'pixel',
+      pixelScale: 1.25,
+      complexity: 1,
+      audio: ['arcade'],
+      gary: false,
+      tags: ['arcade', 'games', 'neon', '80s'],
+    },
+    settings: [
+      { key: 'speed', label: 'Game speed', type: 'range', min: 0.3, max: 3, step: 0.1, default: 1 },
+      { key: 'lights', label: 'Floor glow', type: 'toggle', default: true },
+    ],
+    load: () => import('./arcadeRoom'),
+  },
+]

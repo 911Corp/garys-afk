@@ -1,0 +1,32 @@
+import { existsSync } from 'node:fs'
+import { describe, expect, it } from 'vitest'
+import { defaultSettings, sanitizeSettings } from '../../src/engine/types'
+import { CATEGORIES, SCENES } from '../../src/scenes/registry'
+
+describe('scene catalogue', () => {
+  it('has 32 scenes, 4 per category, unique stable ids', () => {
+    expect(SCENES).toHaveLength(32)
+    expect(new Set(SCENES.map((s) => s.meta.id)).size).toBe(32)
+    for (const c of CATEGORIES) expect(SCENES.filter((s) => s.meta.category === c.id)).toHaveLength(4)
+  })
+  it('every scene has a real thumbnail, a description, an ambience and valid defaults', () => {
+    for (const s of SCENES) {
+      expect(existsSync(`public/assets/thumbnails/${s.meta.id}.png`), s.meta.id).toBe(true)
+      expect(s.meta.description.length).toBeGreaterThan(20)
+      expect(s.meta.audio.length).toBeGreaterThan(0)
+      const d = defaultSettings(s.settings)
+      expect(sanitizeSettings(s.settings, d)).toEqual(d)
+      for (const def of s.settings) {
+        if (def.type === 'range') expect(def.default >= def.min && def.default <= def.max, `${s.meta.id}.${def.key}`).toBe(true)
+        if (def.type === 'select') expect(def.options.some((o) => o.value === def.default), `${s.meta.id}.${def.key}`).toBe(true)
+      }
+      expect(new Set(s.settings.map((d) => d.key)).size).toBe(s.settings.length)
+    }
+  })
+  it('only the Gary scenes and DVD Survivor declare Gary', () => {
+    expect(SCENES.filter((s) => s.meta.gary).map((s) => s.meta.id)).toEqual(['gary-exe', 'touch-grass', 'burger-shift', 'the-trenches', 'dvd-survivor'])
+  })
+  it('scenes that can flash say so', () => {
+    expect(SCENES.filter((s) => s.meta.flashes).map((s) => s.meta.id).sort()).toEqual(['rainy-night', 'thunderstorm'])
+  })
+})

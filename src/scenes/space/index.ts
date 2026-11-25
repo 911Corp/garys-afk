@@ -1,0 +1,128 @@
+import type { SceneEntry } from '../../engine/types'
+
+export const spaceScenes: SceneEntry[] = [
+  {
+    meta: {
+      id: 'starfield',
+      name: 'Starfield',
+      category: 'space',
+      description: 'The classic flight through a 3D field of stars. Push the speed for warp streaks.',
+      version: '1.0.0',
+      render: 'pixel',
+      complexity: 1,
+      audio: ['space'],
+      gary: false,
+      tags: ['stars', 'warp', '3d', 'classic'],
+    },
+    settings: [
+      { key: 'speed', label: 'Speed', type: 'range', min: 0.1, max: 4, step: 0.1, default: 1 },
+      {
+        key: 'direction',
+        label: 'Direction',
+        type: 'select',
+        options: [
+          { value: 'forward', label: 'Forward' },
+          { value: 'back', label: 'Backward' },
+          { value: 'drift', label: 'Sideways drift' },
+        ],
+        default: 'forward',
+      },
+      { key: 'density', label: 'Star density', type: 'range', min: 0.2, max: 3, step: 0.1, default: 1 },
+      {
+        key: 'tint',
+        label: 'Tint',
+        type: 'select',
+        options: [
+          { value: 'white', label: 'White' },
+          { value: 'blue', label: 'Blue' },
+          { value: 'amber', label: 'Amber' },
+        ],
+        default: 'white',
+      },
+    ],
+    load: () => import('./starfield'),
+  },
+  {
+    meta: {
+      id: 'black-hole',
+      name: 'Black Hole',
+      category: 'space',
+      description: 'An artistic black hole: a tilted accretion disk, its far side bent over the shadow, stars pushed aside. Not a physics simulation.',
+      version: '1.0.0',
+      render: 'pixel',
+      complexity: 2,
+      audio: ['space', 'brown'],
+      gary: false,
+      tags: ['gravity', 'disk', 'orbit'],
+    },
+    settings: [
+      { key: 'speed', label: 'Orbit speed', type: 'range', min: 0.1, max: 3, step: 0.1, default: 1 },
+      { key: 'disk', label: 'Disk density', type: 'range', min: 0.3, max: 2, step: 0.1, default: 1 },
+      { key: 'tilt', label: 'Tilt', type: 'range', min: 0.08, max: 0.5, step: 0.01, default: 0.2 },
+      { key: 'size', label: 'Size', type: 'range', min: 0.6, max: 1.6, step: 0.1, default: 1 },
+    ],
+    load: () => import('./blackHole'),
+  },
+  {
+    meta: {
+      id: 'solar-system',
+      name: 'Solar System',
+      category: 'space',
+      description: 'The eight planets on their orbits, with their real period ratios. Speed up time or zoom on the inner planets.',
+      version: '1.0.0',
+      render: 'pixel',
+      pixelScale: 1.25,
+      complexity: 1,
+      audio: ['space'],
+      gary: false,
+      tags: ['planets', 'orbits', 'sun'],
+    },
+    settings: [
+      { key: 'days', label: 'Time speed', type: 'range', min: 1, max: 400, step: 1, default: 30, unit: 'days/s' },
+      {
+        key: 'scale',
+        label: 'Scale',
+        type: 'select',
+        options: [
+          { value: 'log', label: 'All planets' },
+          { value: 'inner', label: 'Inner planets' },
+        ],
+        default: 'log',
+      },
+      { key: 'tilt', label: 'View tilt', type: 'range', min: 0.25, max: 1, step: 0.05, default: 0.45 },
+      { key: 'labels', label: 'Labels', type: 'toggle', default: true },
+    ],
+    load: () => import('./solarSystem'),
+  },
+  {
+    meta: {
+      id: 'nebula',
+      name: 'Nebula',
+      category: 'space',
+      description: 'Slowly shifting clouds of gas built from warped noise, with a scatter of stars.',
+      version: '1.0.0',
+      render: 'pixel',
+      complexity: 3,
+      audio: ['space', 'pink'],
+      gary: false,
+      tags: ['gas', 'clouds', 'generative', 'stars'],
+    },
+    settings: [
+      {
+        key: 'palette',
+        label: 'Palette',
+        type: 'select',
+        options: [
+          { value: 'violet', label: 'Violet' },
+          { value: 'emerald', label: 'Emerald' },
+          { value: 'fire', label: 'Fire' },
+        ],
+        default: 'violet',
+      },
+      { key: 'density', label: 'Gas density', type: 'range', min: 0.5, max: 1.6, step: 0.05, default: 1 },
+      { key: 'evolve', label: 'Evolution speed', type: 'range', min: 0, max: 4, step: 0.1, default: 1 },
+      { key: 'stars', label: 'Stars', type: 'range', min: 0, max: 3, step: 0.1, default: 1 },
+    ],
+    load: () => import('./nebula'),
+  },
+]

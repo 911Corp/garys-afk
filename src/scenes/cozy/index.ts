@@ -1,0 +1,136 @@
+import type { SceneEntry } from '../../engine/types'
+
+export const cozyScenes: SceneEntry[] = [
+  {
+    meta: {
+      id: 'fireplace',
+      name: 'Fireplace',
+      category: 'cozy',
+      description: 'A pixel fire in a brick hearth. Embers drift up, the room glows and flickers.',
+      version: '1.0.0',
+      render: 'pixel',
+      complexity: 2,
+      audio: ['fire'],
+      gary: false,
+      tags: ['fire', 'warm', 'hearth', 'embers'],
+    },
+    settings: [
+      { key: 'intensity', label: 'Flame intensity', type: 'range', min: 0.3, max: 1.6, step: 0.1, default: 1 },
+      { key: 'embers', label: 'Embers', type: 'toggle', default: true },
+      { key: 'glow', label: 'Room glow', type: 'range', min: 0, max: 1.5, step: 0.1, default: 1 },
+    ],
+    load: () => import('./fireplace'),
+  },
+  {
+    meta: {
+      id: 'rainy-night',
+      name: 'Rainy Night',
+      category: 'cozy',
+      description: 'A window over a rainy city. Drops gather on the glass, then slide down; a candle burns on the sill.',
+      version: '1.0.0',
+      render: 'pixel',
+      complexity: 2,
+      audio: ['rain'],
+      gary: false,
+      flashes: true,
+      tags: ['rain', 'city', 'window', 'night'],
+    },
+    settings: [
+      { key: 'rain', label: 'Rain', type: 'range', min: 0.2, max: 2.5, step: 0.1, default: 1 },
+      { key: 'glass', label: 'Drops on the glass', type: 'range', min: 0, max: 2, step: 0.1, default: 1 },
+      {
+        key: 'city',
+        label: 'City lights',
+        type: 'select',
+        options: [
+          { value: 'warm', label: 'Warm' },
+          { value: 'cool', label: 'Cool' },
+          { value: 'neon', label: 'Neon' },
+        ],
+        default: 'warm',
+      },
+      { key: 'candle', label: 'Candle', type: 'toggle', default: true },
+      { key: 'lightning', label: 'Distant lightning', type: 'toggle', default: false },
+    ],
+    load: () => import('./rainyNight'),
+  },
+  {
+    meta: {
+      id: 'snow-cabin',
+      name: 'Snow Cabin',
+      category: 'cozy',
+      description: 'A log cabin on a snowy hill. Warm windows, chimney smoke, snow falling in three layers.',
+      version: '1.0.0',
+      render: 'pixel',
+      complexity: 1,
+      audio: ['wind', 'fire'],
+      gary: false,
+      tags: ['snow', 'winter', 'cabin', 'night'],
+    },
+    settings: [
+      { key: 'snow', label: 'Snowfall', type: 'range', min: 0, max: 2.5, step: 0.1, default: 1 },
+      { key: 'wind', label: 'Wind', type: 'range', min: -1.5, max: 1.5, step: 0.1, default: 0.3 },
+      {
+        key: 'time',
+        label: 'Time',
+        type: 'select',
+        options: [
+          { value: 'night', label: 'Night' },
+          { value: 'dusk', label: 'Dusk' },
+        ],
+        default: 'night',
+      },
+      { key: 'lights', label: 'Lights on', type: 'toggle', default: true },
+    ],
+    load: () => import('./snowCabin'),
+  },
+  {
+    meta: {
+      id: 'aquarium',
+      name: 'Aquarium',
+      category: 'cozy',
+      description: 'A planted tank. Tetras school, angelfish cruise, the pleco hugs the sand, bubbles rise.',
+      version: '1.0.0',
+      render: 'pixel',
+      complexity: 1,
+      audio: ['underwater'],
+      gary: false,
+      tags: ['fish', 'water', 'plants', 'calm'],
+    },
+    settings: [
+      { key: 'fish', label: 'Fish', type: 'range', min: 3, max: 40, step: 1, default: 16 },
+      {
+        key: 'species',
+        label: 'Species',
+        type: 'select',
+        options: [
+          { value: 'community', label: 'Freshwater community' },
+          { value: 'reef', label: 'Reef' },
+          { value: 'mixed', label: 'Mixed' },
+        ],
+        default: 'community',
+      },
+      {
+        key: 'depth',
+        label: 'Water',
+        type: 'select',
+        options: [
+          { value: 'shallow', label: 'Shallow' },
+          { value: 'deep', label: 'Deep' },
+        ],
+        default: 'shallow',
+      },
+      {
+        key: 'light',
+        label: 'Light',
+        type: 'select',
+        options: [
+          { value: 'day', label: 'Daylight' },
+          { value: 'moon', label: 'Moonlight' },
+        ],
+        default: 'day',
+      },
+    ],
+    load: () => import('./aquarium'),
+  },
+]

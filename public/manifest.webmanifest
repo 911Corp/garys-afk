@@ -1,0 +1,19 @@
+{
+  "name": "Gary's AFK",
+  "short_name": "Gary's AFK",
+  "description": "A collection of animated worlds, retro screensavers and ambient experiences for people who spend too much time online.",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0d0f0e",
+  "theme_color": "#0d0f0e",
+  "categories": ["entertainment", "lifestyle", "productivity"],
+  "icons": [
+    { "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "assets/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

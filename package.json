@@ -1,0 +1,39 @@
+{
+  "name": "garys-afk",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "A collection of animated worlds, retro screensavers and ambient experiences for people who spend too much time online.",
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "lint": "oxlint src tests",
+    "typecheck": "tsc -b",
+    "test": "vitest run",
+    "test:e2e": "node tests/e2e/run.mjs",
+    "thumbs": "node scripts/thumbnails.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@fontsource/ibm-plex-mono": "^5.3.0",
+    "@fontsource/press-start-2p": "^5.3.0",
+    "@fontsource/vt323": "^5.3.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.9",
+    "@types/react": "^19.3.1",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.3.0",
+    "oxlint": "^1.95.0",
+    "playwright": "^1.65.1",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.8",
+    "vitest": "^5.1.1"
+  }
+}

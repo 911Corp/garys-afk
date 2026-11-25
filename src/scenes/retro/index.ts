@@ -1,0 +1,138 @@
+import type { SceneEntry } from '../../engine/types'
+
+export const retroScenes: SceneEntry[] = [
+  {
+    meta: {
+      id: 'dvd-survivor',
+      name: 'DVD Survivor',
+      category: 'retro',
+      description: 'A logo bounces around and changes colour at every wall. Will it ever hit the corner?',
+      version: '1.0.0',
+      render: 'pixel',
+      pixelScale: 1.25,
+      complexity: 1,
+      audio: ['white'],
+      gary: true,
+      tags: ['bounce', 'logo', 'corner', 'classic'],
+    },
+    settings: [
+      {
+        key: 'logo',
+        label: 'Logo',
+        type: 'select',
+        options: [
+          { value: 'afk', label: "Gary's AFK" },
+          { value: 'ngmi', label: 'NGMI' },
+          { value: 'gary', label: "Gary's head" },
+        ],
+        default: 'ngmi',
+      },
+      { key: 'speed', label: 'Speed', type: 'range', min: 0.3, max: 4, step: 0.1, default: 1 },
+      { key: 'size', label: 'Logo size', type: 'range', min: 0.6, max: 2.5, step: 0.1, default: 1.4 },
+      { key: 'counter', label: 'Corner counter', type: 'toggle', default: true },
+    ],
+    load: () => import('./dvdSurvivor'),
+  },
+  {
+    meta: {
+      id: '3d-pipes',
+      name: '3D Pipes',
+      category: 'retro',
+      description: 'Pipes grow through a slowly turning 3D grid, turning at random, until the box fills up.',
+      version: '1.0.0',
+      render: 'pixel',
+      complexity: 1,
+      audio: ['brown'],
+      gary: false,
+      tags: ['3d', 'pipes', 'procedural', 'classic'],
+    },
+    settings: [
+      { key: 'pipes', label: 'Pipes at once', type: 'range', min: 1, max: 6, step: 1, default: 3 },
+      { key: 'speed', label: 'Growth speed', type: 'range', min: 0.2, max: 4, step: 0.1, default: 1 },
+      { key: 'length', label: 'Max pipe length', type: 'range', min: 10, max: 200, step: 5, default: 60 },
+      {
+        key: 'joints',
+        label: 'Joints',
+        type: 'select',
+        options: [
+          { value: 'ball', label: 'Balls' },
+          { value: 'elbow', label: 'Plain elbows' },
+        ],
+        default: 'ball',
+      },
+      { key: 'rotate', label: 'Camera turn', type: 'range', min: 0, max: 3, step: 0.1, default: 1 },
+    ],
+    load: () => import('./pipes'),
+  },
+  {
+    meta: {
+      id: 'endless-maze',
+      name: 'Endless Maze',
+      category: 'retro',
+      description: 'A ray-cast walk through generated mazes, following the right-hand wall, one maze after another.',
+      version: '1.0.0',
+      render: 'pixel',
+      complexity: 2,
+      audio: ['brown', 'computer'],
+      gary: false,
+      tags: ['3d', 'maze', 'raycast', 'classic'],
+    },
+    settings: [
+      {
+        key: 'walls',
+        label: 'Walls',
+        type: 'select',
+        options: [
+          { value: 'brick', label: 'Brick' },
+          { value: 'stone', label: 'Stone' },
+          { value: 'neon', label: 'Neon grid' },
+        ],
+        default: 'brick',
+      },
+      { key: 'speed', label: 'Walking speed', type: 'range', min: 0.3, max: 3, step: 0.1, default: 1 },
+      { key: 'mazeSize', label: 'Maze size', type: 'range', min: 9, max: 31, step: 2, default: 15 },
+      { key: 'fog', label: 'Fog', type: 'range', min: 0, max: 1.5, step: 0.1, default: 0.8 },
+    ],
+    load: () => import('./maze'),
+  },
+  {
+    meta: {
+      id: 'flying-floppies',
+      name: 'Flying Floppies',
+      category: 'retro',
+      description: 'Winged floppy disks and CRT monitors cross the screen in formation. An original take on the flying-objects screensaver.',
+      version: '1.0.0',
+      render: 'pixel',
+      complexity: 1,
+      audio: ['white'],
+      gary: false,
+      tags: ['sprites', 'wings', 'floppy', 'classic'],
+    },
+    settings: [
+      { key: 'count', label: 'How many', type: 'range', min: 3, max: 40, step: 1, default: 14 },
+      { key: 'speed', label: 'Speed', type: 'range', min: 0.3, max: 3, step: 0.1, default: 1 },
+      {
+        key: 'objects',
+        label: 'Objects',
+        type: 'select',
+        options: [
+          { value: 'mixed', label: 'Floppies and monitors' },
+          { value: 'floppies', label: 'Floppies only' },
+          { value: 'monitors', label: 'Monitors only' },
+        ],
+        default: 'mixed',
+      },
+      {
+        key: 'sky',
+        label: 'Background',
+        type: 'select',
+        options: [
+          { value: 'black', label: 'Black' },
+          { value: 'night', label: 'Starry' },
+        ],
+        default: 'black',
+      },
+    ],
+    load: () => import('./flyingFloppies'),
+  },
+]

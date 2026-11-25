@@ -1,0 +1,96 @@
+import type { SceneEntry } from '../../engine/types'
+import { garySettingsCommon } from './garyBase'
+
+export const garyScenes: SceneEntry[] = [
+  {
+    meta: {
+      id: 'gary-exe',
+      name: 'Gary.exe',
+      category: 'gary',
+      description: 'Gary fell asleep at his desk. Jarvis keeps the build running.',
+      version: '1.0.0',
+      render: 'pixel',
+      pixelScale: 1.5,
+      complexity: 1,
+      audio: ['computer', 'night'],
+      gary: true,
+      tags: ['desk', 'night', 'jarvis', 'sleep', 'lcd'],
+    },
+    settings: [
+      ...garySettingsCommon,
+      { key: 'jarvis', label: 'Jarvis activity', type: 'range', min: 0.2, max: 3, step: 0.1, default: 1 },
+      { key: 'lamp', label: 'Screen glow', type: 'toggle', default: true },
+    ],
+    load: () => import('./garyExe'),
+  },
+  {
+    meta: {
+      id: 'touch-grass',
+      name: 'Touch Grass',
+      category: 'gary',
+      description: 'Gary went outside. Wind in the grass, clouds, birds, and a full day passing over him.',
+      version: '1.0.0',
+      render: 'pixel',
+      pixelScale: 1.5,
+      complexity: 1,
+      audio: ['wind', 'night'],
+      gary: true,
+      tags: ['outside', 'nature', 'day', 'lcd'],
+    },
+    settings: [
+      ...garySettingsCommon,
+      { key: 'wind', label: 'Wind', type: 'range', min: 0, max: 2, step: 0.1, default: 0.8 },
+      {
+        key: 'time',
+        label: 'Time of day',
+        type: 'select',
+        options: [
+          { value: 'cycle', label: 'Full day cycle' },
+          { value: 'day', label: 'Day' },
+          { value: 'sunset', label: 'Sunset' },
+          { value: 'night', label: 'Night' },
+        ],
+        default: 'cycle',
+      },
+      { key: 'cycle', label: 'Day length', type: 'range', min: 1, max: 20, step: 1, default: 6, unit: 'min' },
+    ],
+    load: () => import('./touchGrass'),
+  },
+  {
+    meta: {
+      id: 'burger-shift',
+      name: 'Burger Shift',
+      category: 'gary',
+      description: 'Back to burgers. The menu, the counter, the OPEN sign, and Gary serving.',
+      version: '1.0.0',
+      render: 'pixel',
+      pixelScale: 1.5,
+      complexity: 1,
+      audio: ['brown'],
+      gary: true,
+      tags: ['work', 'humour', 'lcd'],
+    },
+    settings: [...garySettingsCommon, { key: 'rush', label: 'Order rate', type: 'range', min: 0.3, max: 3, step: 0.1, default: 1 }],
+    load: () => import('./burgerShift'),
+  },
+  {
+    meta: {
+      id: 'the-trenches',
+      name: 'The Trenches',
+      category: 'gary',
+      description: 'Night shift in the trenches. A made-up market pumps, crabs and rugs; Gary reacts in his five original poses. Simulated data only.',
+      version: '1.0.0',
+      render: 'pixel',
+      pixelScale: 1.5,
+      complexity: 1,
+      audio: ['computer'],
+      gary: true,
+      tags: ['trading', 'chart', 'night', 'lcd', 'simulated'],
+    },
+    settings: [
+      ...garySettingsCommon,
+      { key: 'chaos', label: 'Market chaos', type: 'range', min: 0.2, max: 3, step: 0.1, default: 1 },
+    ],
+    load: () => import('./trenches'),
+  },
+]
