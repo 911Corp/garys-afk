@@ -1,5 +1,31 @@
 # Changelog
 
+## 1.1.0 (2026-11-25)
+
+### Changed
+- New interface style, matched on the owner's reference screens: IBM Plex Mono everywhere, a
+  rounded app frame, thin rounded buttons, chips and cards, mint accent for what is active, a large
+  clock centred at the top of the scene.
+- Scenes now render smooth and sharp at the screen's resolution. The pixel look stays available as
+  the **Retro pixels** display option (off by default). Per-pixel scenes (Nebula, Ocean Waves,
+  Northern Lights, Thunderstorm, Fractal Explorer, Game of Life, Endless Maze) render at a lower
+  internal resolution and are smoothed when scaled.
+- Starfield redrawn in the spirit of the reference "The Void": deep blue night, star streaks.
+- Ocean Waves: sun clipped at the horizon, finer sun glitter.
+- Thumbnails regenerated from the smooth renders, as 640×360 JPEG.
+- Subtle CRT scanlines on by default.
+
+### Gary
+- Gary now appears in one scene only, **Gary.exe**, asleep, with no speech bubbles.
+- Removed: Touch Grass and Burger Shift, and the "Gary's head" logo of DVD Survivor.
+- The Trenches no longer shows Gary: an empty trading desk with three monitors of simulated
+  markets (red and green candles, order book, fake alerts).
+- The "Gary's Universe" category becomes **After Hours**.
+
+### Added
+- **Night Diner**: a retro diner after midnight, neon, rain and headlights outside, coffee steaming.
+- **Lo-fi Room**: a cosy room at night, rain on the window, a record spinning, a cat asleep, fairy lights.
+
 ## 1.0.0 (2026-11-25), first complete version, not deployed
 
 ### Direction

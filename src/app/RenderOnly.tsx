@@ -24,6 +24,7 @@ export function RenderOnly({ id }: { id: string }) {
         noFlash: q.get('noflash') === '1',
         reducedMotion: q.get('reduced') === '1',
         quality: (q.get('q') as 'low' | 'balanced' | 'high') ?? 'high',
+        retro: q.get('retro') === '1',
       },
       onError: (e) => {
         document.title = 'ERROR ' + String(e)

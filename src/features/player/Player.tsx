@@ -40,6 +40,7 @@ export function Player(p: PlayerProps) {
     noFlash: access.noFlash,
     reducedMotion: p.reducedMotion,
     quality: access.powerSaver ? 'low' : display.quality,
+    retro: display.retro,
   }
   const fps = access.powerSaver ? 15 : display.fps
 
@@ -71,7 +72,7 @@ export function Player(p: PlayerProps) {
   useEffect(() => {
     stageRef.current?.setOptions({ speed: display.speed * (p.reducedMotion ? 0.6 : 1), fpsCap: fps, global })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [display.speed, fps, display.density, display.intensity, display.showGary, display.quality, access.noFlash, access.powerSaver, p.reducedMotion])
+  }, [display.speed, fps, display.density, display.intensity, display.showGary, display.quality, display.retro, access.noFlash, access.powerSaver, p.reducedMotion])
 
   useEffect(() => {
     if (p.paused) stageRef.current?.pause()

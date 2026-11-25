@@ -8,8 +8,12 @@ export interface StageOptions {
   onEvent?: (e: SceneEvent) => void
 }
 
-/** Buffer height in pixels per quality level, before the scene's own pixelScale. */
+/** Retro pixels mode: buffer short side per quality level, before the scene's own pixelScale. */
 const PIXEL_H = { low: 144, balanced: 180, high: 224 } as const
+/** Smooth mode: buffer short side per quality level, capped by the real device pixels. */
+const SMOOTH_H = { low: 360, balanced: 720, high: 1080 } as const
+/** Smooth mode, per-pixel scenes: lower internal resolution, smoothed on upscale. */
+const HEAVY_H = { low: 200, balanced: 300, high: 420 } as const
 
 /**
  * Owns one canvas and runs one scene in it. A fresh canvas is created per scene because a canvas
@@ -21,6 +25,8 @@ export class Stage {
   private canvas: HTMLCanvasElement | null = null
   private scene: SceneInstance | null = null
   private entry: SceneEntry | null = null
+  private settings: SceneSettings = {}
+  private seed = 0
   private raf = 0
   private last = 0
   private sinceFrame = 0
@@ -48,6 +54,8 @@ export class Stage {
     const my = ++this.token
     this.teardown()
     this.entry = entry
+    this.settings = settings
+    this.seed = seed
     let mod
     try {
       mod = await entry.load()
@@ -63,6 +71,7 @@ export class Stage {
     this.host.prepend(canvas)
     this.canvas = canvas
     const { w, h, pr } = this.measure()
+    canvas.style.imageRendering = this.opts.global.retro ? 'pixelated' : 'auto'
     canvas.width = w
     canvas.height = h
     try {
@@ -87,13 +96,20 @@ export class Stage {
   }
 
   setSettings(settings: SceneSettings) {
+    this.settings = settings
     this.scene?.setSettings(settings, this.opts.global)
     if (!this.running) this.scene?.render()
   }
 
   setOptions(opts: Partial<StageOptions>) {
     const qualityChanged = opts.global && opts.global.quality !== this.opts.global.quality
+    const modeChanged = opts.global && opts.global.retro !== this.opts.global.retro
     this.opts = { ...this.opts, ...opts }
+    // switching smooth/retro needs a fresh canvas (different context options)
+    if (modeChanged && this.entry) {
+      this.load(this.entry, this.settings, this.seed)
+      return
+    }
     if (opts.global && this.scene) this.scene.setSettings(this.currentSettingsPassthrough(), this.opts.global)
     if (qualityChanged) this.resize()
   }
@@ -152,9 +168,17 @@ export class Stage {
     const rect = this.host.getBoundingClientRect()
     const cw = Math.max(1, rect.width)
     const ch = Math.max(1, rect.height)
-    const target = PIXEL_H[this.opts.global.quality] * (this.entry?.meta.pixelScale ?? 1)
-    // portrait screens: keep the short side at the target so pixels stay the same size
-    const pr = target / Math.min(cw, ch)
+    const g = this.opts.global
+    const meta = this.entry?.meta
+    const short = Math.min(cw, ch)
+    let target: number
+    if (g.retro) target = PIXEL_H[g.quality] * (meta?.pixelScale ?? 1)
+    else if (meta?.heavy) target = HEAVY_H[g.quality]
+    else target = Math.min(SMOOTH_H[g.quality], short * Math.min(2, window.devicePixelRatio || 1))
+    target = Math.max(120, target)
+    // portrait screens: the target applies to the short side
+    const pr = target / short
+    if (this.canvas) this.canvas.style.imageRendering = g.retro ? 'pixelated' : 'auto'
     return { w: Math.max(16, Math.round(cw * pr)), h: Math.max(16, Math.round(ch * pr)), pr }
   }
 

@@ -75,8 +75,13 @@ class OceanWaves extends PixelScene {
           const base: RGB = [mid[0] + (crest[0] - mid[0]) * k, mid[1] + (crest[1] - mid[1]) * k, mid[2] + (crest[2] - mid[2]) * k]
           col = [base[0] + (deep[0] - base[0]) * far * 0.6, base[1] + (deep[1] - base[1]) * far * 0.6, base[2] + (deep[2] - base[2]) * far * 0.6]
           // sun path: glints scattered in a cone below the sun
-          const dx = Math.abs(x - sunX) / (w * (0.04 + (1 - far) * 0.12))
-          if (dx < 1 && slope > 0.5 - (1 - dx) * 0.7 && (((x * 73856093) ^ (y * 19349663) ^ Math.floor(t * 5 + x * 0.3)) & 7) < 2) col = glint
+          const dx = Math.abs(x - sunX) / (w * (0.03 + (1 - far) * 0.05))
+          if (dx < 1 && slope > 0.8 - (1 - dx) * 0.5) {
+            // scattered sparkles: an integer hash per pixel, reshuffled a few times a second
+            let n = (x * 374761393 + y * 668265263 + Math.floor(t * 4) * 1442695041) | 0
+            n = Math.imul(n ^ (n >>> 13), 1274126177)
+            if (((n ^ (n >>> 16)) & 31) < 2 + far * 8) col = glint
+          }
         } else {
           col = L.night ? [38, 50, 74] : [244, 213, 138]
         }
@@ -93,10 +98,16 @@ class OceanWaves extends PixelScene {
     }
     // sun or moon
     const sunY = horizon - (this.str('light') === 'sunset' ? 6 : 34) * u
+    // the sun sets behind the sea: clip it at the horizon
+    c.save()
+    c.beginPath()
+    c.rect(0, 0, w, horizon)
+    c.clip()
     c.fillStyle = L.sun
     c.beginPath()
     c.arc(sunX, sunY, (this.str('light') === 'sunset' ? 14 : 9) * u, 0, Math.PI * 2)
     c.fill()
+    c.restore()
     if (this.str('light') === 'sunset') {
       c.fillStyle = L.sky[1]
       c.fillRect(0, horizon - 1, w, 1)

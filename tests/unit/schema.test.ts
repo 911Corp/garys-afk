@@ -16,7 +16,7 @@ describe('settings schema', () => {
     expect(s.display.fps).toBe(30)
     expect(s.display.quality).toBe('balanced')
     expect(s.display.crt).toBe('strong')
-    expect(s.clock.pos).toBe('tr')
+    expect(s.clock.pos).toBe('tc')
     expect(s.clock.size).toBe(0.5)
   })
   it('removes unknown scene ids everywhere', () => {

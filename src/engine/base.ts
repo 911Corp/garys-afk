@@ -66,18 +66,19 @@ export abstract class BaseScene implements SceneInstance {
 }
 
 /**
- * Every scene in Gary's AFK is a PixelScene: it draws with the Canvas 2D API into a small buffer
- * (about 320x180, see Stage), then the frame is reduced to the scene's palette with ordered
- * dithering. Design in buffer pixels: `this.w` x `this.h`, and `this.u` = h / 180 as the unit.
+ * Every scene in Gary's AFK is a PixelScene: it draws with the Canvas 2D API into a buffer sized by
+ * the Stage. Smooth mode (default): a sharp HD buffer. Retro pixels mode: a ~320x180 buffer whose
+ * frame is reduced to the scene's palette with ordered dithering. Design in units: `this.u` is one
+ * pixel of a 180-pixel-high screen, so the same code draws at any resolution.
  */
 export abstract class PixelScene extends BaseScene {
   c: CanvasRenderingContext2D
   constructor(ctx: SceneContext) {
     super(ctx)
-    const c = this.canvas.getContext('2d', { alpha: false, willReadFrequently: true })
+    const c = this.canvas.getContext('2d', { alpha: false, willReadFrequently: ctx.global.retro })
     if (!c) throw new Error('Canvas 2D is not available')
     this.c = c
-    c.imageSmoothingEnabled = false
+    c.imageSmoothingEnabled = !ctx.global.retro
   }
   /** One unit = one pixel of a 180-pixel-high screen. */
   get u() {
@@ -97,12 +98,13 @@ export abstract class PixelScene extends BaseScene {
     c.setTransform(1, 0, 0, 1, 0, 0)
     c.globalAlpha = 1
     c.globalCompositeOperation = 'source-over'
-    c.imageSmoothingEnabled = false
+    c.imageSmoothingEnabled = !this.g.retro
     this.draw()
     c.setTransform(1, 0, 0, 1, 0, 0)
     c.globalAlpha = 1
     c.globalCompositeOperation = 'source-over'
     c.shadowBlur = 0
+    if (!this.g.retro) return
     const img = c.getImageData(0, 0, this.w, this.h)
     quantize(img, this.palette(), this.dither())
     c.putImageData(img, 0, 0)

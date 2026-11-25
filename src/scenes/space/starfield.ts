@@ -53,32 +53,42 @@ class Starfield extends PixelScene {
   }
   draw() {
     const c = this.c
-    const { w, h } = this
-    c.fillStyle = '#000'
+    const { w, h, u } = this
+    const tint = this.str('tint')
+    const bg = c.createLinearGradient(0, 0, 0, h)
+    bg.addColorStop(0, tint === 'amber' ? '#100a04' : '#04060f')
+    bg.addColorStop(1, tint === 'amber' ? '#1c1208' : '#0a1030')
+    c.fillStyle = bg
     c.fillRect(0, 0, w, h)
     const f = Math.max(w, h) * 0.5
     const cx = w / 2
     const cy = h / 2
-    const warp = this.num('speed') > 2.2 && this.str('direction') !== 'drift'
+    const drift = this.str('direction') === 'drift'
+    const col = tint === 'amber' ? [255, 196, 120] : tint === 'white' ? [235, 238, 245] : [150, 190, 255]
+    // streak length grows with speed: at warp the stars become long lines
+    const trail = 0.06 + Math.min(1.2, this.num('speed') * 0.18)
+    c.lineCap = 'round'
     for (const s of this.stars) {
-      const x = cx + (s.x / s.z) * f * (this.str('direction') === 'drift' ? s.z : 1)
-      const y = cy + (s.y / s.z) * f * (this.str('direction') === 'drift' ? s.z : 1)
-      if (x < 0 || y < 0 || x >= w || y >= h) continue
+      const k = drift ? s.z : 1
+      const x = cx + (s.x / s.z) * f * k
+      const y = cy + (s.y / s.z) * f * k
+      if (x < -20 || y < -20 || x > w + 20 || y > h + 20) continue
       const b = 1 - s.z
-      const shade = Math.min(255, Math.round(120 + b * 170))
-      c.fillStyle = `rgb(${shade},${shade},${shade})`
-      const size = b > 0.85 ? 2 : 1
-      if (warp) {
-        const px = cx + (s.x / s.pz) * f
-        const py = cy + (s.y / s.pz) * f
-        c.strokeStyle = c.fillStyle
-        c.lineWidth = size
-        c.beginPath()
-        c.moveTo(Math.round(px), Math.round(py))
-        c.lineTo(Math.round(x), Math.round(y))
-        c.stroke()
+      const a = Math.min(1, 0.25 + b * 1.1)
+      c.strokeStyle = `rgba(${col[0]},${col[1]},${col[2]},${a})`
+      c.lineWidth = Math.max(1, (0.5 + b * 1.6) * u * 0.6)
+      c.beginPath()
+      if (drift) {
+        c.moveTo(x, y)
+        c.lineTo(x + trail * 30 * u * (1.1 - s.z), y)
+      } else {
+        const zt = Math.min(1, s.z * (1 + trail * (this.str('direction') === 'back' ? -0.5 : 1)))
+        const tx = cx + (s.x / zt) * f
+        const ty = cy + (s.y / zt) * f
+        c.moveTo(tx, ty)
+        c.lineTo(x, y)
       }
-      c.fillRect(Math.round(x), Math.round(y), size, size)
+      c.stroke()
     }
   }
 }

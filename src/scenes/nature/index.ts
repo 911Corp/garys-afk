@@ -16,6 +16,7 @@ export const natureScenes: SceneEntry[] = [
   {
     meta: {
       id: 'ocean-waves',
+      heavy: true,
       name: 'Ocean Waves',
       category: 'nature',
       description: 'Open sea from the beach: rolling swell in perspective, a path of sun glints, waves rushing up the sand.',
@@ -67,6 +68,7 @@ export const natureScenes: SceneEntry[] = [
   {
     meta: {
       id: 'northern-lights',
+      heavy: true,
       name: 'Northern Lights',
       category: 'nature',
       description: 'Curtains of aurora rippling over snowy peaks, mirrored in a still lake.',
@@ -98,6 +100,7 @@ export const natureScenes: SceneEntry[] = [
   {
     meta: {
       id: 'thunderstorm',
+      heavy: true,
       name: 'Thunderstorm',
       category: 'nature',
       description: 'A storm over the fields: rolling clouds, slanted rain, branching lightning. Has a no-flash mode.',

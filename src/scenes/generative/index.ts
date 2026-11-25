@@ -12,6 +12,7 @@ export const generativeScenes: SceneEntry[] = [
   {
     meta: {
       id: 'game-of-life',
+      heavy: true,
       name: 'Game of Life',
       category: 'generative',
       description: "Conway's cellular automaton, for real: B3/S23 on a wrapping grid, classic seeds, auto-reseed when it settles.",
@@ -58,6 +59,7 @@ export const generativeScenes: SceneEntry[] = [
   {
     meta: {
       id: 'fractal-explorer',
+      heavy: true,
       name: 'Fractal Explorer',
       category: 'generative',
       description: 'Real escape-time fractals: an automatic Mandelbrot deep zoom, the Burning Ship, or a drifting Julia set.',

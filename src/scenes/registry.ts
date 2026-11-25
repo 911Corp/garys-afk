@@ -9,7 +9,7 @@ import { pixelScenes } from './pixel'
 import { generativeScenes } from './generative'
 
 export const CATEGORIES: { id: CategoryId; name: string; short: string }[] = [
-  { id: 'gary', name: "Gary's Universe", short: 'Gary' },
+  { id: 'gary', name: 'After Hours', short: 'After hours' },
   { id: 'terminal', name: 'Terminal & Hacker', short: 'Terminal' },
   { id: 'cozy', name: 'Cozy & Relax', short: 'Cozy' },
   { id: 'space', name: 'Space & Cosmos', short: 'Space' },

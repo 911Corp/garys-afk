@@ -11,7 +11,7 @@ describe('scene catalogue', () => {
   })
   it('every scene has a real thumbnail, a description, an ambience and valid defaults', () => {
     for (const s of SCENES) {
-      expect(existsSync(`public/assets/thumbnails/${s.meta.id}.png`), s.meta.id).toBe(true)
+      expect(existsSync(`public/assets/thumbnails/${s.meta.id}.jpg`), s.meta.id).toBe(true)
       expect(s.meta.description.length).toBeGreaterThan(20)
       expect(s.meta.audio.length).toBeGreaterThan(0)
       const d = defaultSettings(s.settings)
@@ -23,8 +23,8 @@ describe('scene catalogue', () => {
       expect(new Set(s.settings.map((d) => d.key)).size).toBe(s.settings.length)
     }
   })
-  it('only the Gary scenes and DVD Survivor declare Gary', () => {
-    expect(SCENES.filter((s) => s.meta.gary).map((s) => s.meta.id)).toEqual(['gary-exe', 'touch-grass', 'burger-shift', 'the-trenches', 'dvd-survivor'])
+  it('Gary appears in one scene only: Gary.exe, asleep', () => {
+    expect(SCENES.filter((s) => s.meta.gary).map((s) => s.meta.id)).toEqual(['gary-exe'])
   })
   it('scenes that can flash say so', () => {
     expect(SCENES.filter((s) => s.meta.flashes).map((s) => s.meta.id).sort()).toEqual(['rainy-night', 'thunderstorm'])

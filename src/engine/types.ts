@@ -41,8 +41,10 @@ export interface SceneMeta {
   description: string
   version: string
   render: RenderKind
-  /** Buffer height multiplier (1 = 180 px at Balanced). Text-heavy scenes use more pixels. */
+  /** Buffer height multiplier in Retro pixels mode (1 = 180 px at Balanced). Text-heavy scenes use more pixels. */
   pixelScale?: number
+  /** Per-pixel scene (noise, fractal, ray casting): rendered at a lower resolution and smoothed when upscaled. */
+  heavy?: boolean
   /** 1 = light, 2 = medium, 3 = heavy on the CPU. */
   complexity: 1 | 2 | 3
   /** Ambiences that suit this scene, first one is the default. */
@@ -63,6 +65,8 @@ export interface GlobalRender {
   noFlash: boolean
   reducedMotion: boolean
   quality: 'low' | 'balanced' | 'high'
+  /** Retro pixels mode: small buffer, limited palette, ordered dithering, crisp upscale. Off = smooth HD rendering. */
+  retro: boolean
 }
 
 export interface SceneContext {

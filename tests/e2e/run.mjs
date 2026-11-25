@@ -51,6 +51,21 @@ try {
     }
     await page.close()
   }
+  /* ---------- the optional Retro pixels mode ---------- */
+  {
+    const page = await browser.newPage({ viewport: { width: 960, height: 540 } })
+    const errors = []
+    page.on('pageerror', (e) => errors.push(e.message))
+    let small = true
+    for (const id of ['gary-exe', 'fireplace', 'nebula', 'arcade-room']) {
+      await page.goto('about:blank')
+      await page.goto(`${BASE}#/render/${id}?retro=1`)
+      await page.waitForTimeout(1500)
+      small = small && (await page.evaluate(() => document.querySelector('canvas').height <= 340))
+    }
+    ok('Retro pixels mode renders at low resolution', errors.length === 0 && small, errors[0] ?? '')
+    await page.close()
+  }
   /* ---------- no-flash and reduced motion paths ---------- */
   {
     const page = await browser.newPage({ viewport: { width: 800, height: 450 } })

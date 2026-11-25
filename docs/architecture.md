@@ -48,13 +48,17 @@ one-shots (thunder, chime) and a deterministic seed.
 
 ## Rendering pipeline
 
-1. The Stage sizes the canvas to a small buffer: 144, 180 or 224 pixels on the short side depending
-   on the "Pixel size" setting, times the scene's `pixelScale` (text-heavy scenes use 1.25 to 1.5).
-2. The scene draws with the normal Canvas 2D API, in buffer pixels (`this.u` = one pixel of a
-   180-pixel screen).
-3. `PixelScene.render()` reads the frame back and maps every pixel to the scene's palette through a
-   32×32×32 lookup table, adding 4×4 Bayer dithering where the scene wants it.
-4. CSS shows the canvas at full size with `image-rendering: pixelated`.
+Two modes, chosen by the "Retro pixels" display setting.
+
+- **Smooth (default)**: the Stage sizes the canvas to the screen's real pixels (short side capped at
+  360, 720 or 1080 by Graphics quality, and at 2× the CSS size). Scenes flagged `heavy` (per-pixel
+  work) use 200, 300 or 420 and are smoothed when CSS scales them up.
+- **Retro pixels**: a small buffer of 144, 180 or 224 pixels on the short side, times the scene's
+  `pixelScale`. After drawing, `PixelScene.render()` maps every pixel to the scene's palette through
+  a 32×32×32 lookup table with 4×4 Bayer dithering, and CSS shows it with `image-rendering: pixelated`.
+
+In both modes scenes draw in units (`this.u` = one pixel of a 180-pixel-high screen), so the same
+code serves every resolution. Switching mode creates a fresh canvas.
 
 Animation is time-based (`dt` in seconds, clamped to 0.1 s), so scenes look the same at 15, 30 or
 60 FPS. The loop stops when the tab is hidden. A new canvas is created per scene and the old one is
@@ -66,9 +70,9 @@ shrunk to 1×1 and removed, so switching scenes does not accumulate memory (veri
 same `ln`/`blob`/`dot` wobble primitives, same coordinates and stroke widths for the five verdict
 poses (Pure, Mid, Sus, Cursed, SCAM). New poses (asleep, sipping, in the grass, at the counter)
 are built from those primitives and proportions only. The ops are compiled once to `Path2D` and
-reused; a few seeded variants cycle for the optional "line boil". Gary scenes are composed in a
-960×540 world (like the reaction pack scenes) and use a 5-colour Game Boy style palette built on
-the Purity-o-Meter's LCD green, ink and bubble white.
+reused; a few seeded variants cycle for the optional "line boil". Gary appears in one scene,
+Gary.exe, composed in a 960×540 world in the Purity-o-Meter's LCD colours. The other After Hours
+scenes use `src/scenes/gary/world.ts`, the same 960×540 world without Gary.
 
 ## Storage
 

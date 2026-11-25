@@ -8,7 +8,7 @@ import type { AmbienceId, SceneSettings } from '../engine/types'
 export const SCHEMA_VERSION = 1
 
 export type Quality = 'low' | 'balanced' | 'high'
-export type ClockPos = 'tl' | 'tr' | 'bl' | 'br' | 'center'
+export type ClockPos = 'tc' | 'tl' | 'tr' | 'bl' | 'br' | 'center'
 
 export interface PlaylistItem {
   sceneId: string
@@ -39,6 +39,7 @@ export interface State {
     quality: Quality
     fps: 15 | 30 | 60
     crt: 'off' | 'subtle' | 'strong'
+    retro: boolean
     showGary: boolean
     autoHide: boolean
   }
@@ -74,8 +75,8 @@ export function defaults(): State {
     favorites: [],
     recents: [],
     sceneSettings: {},
-    display: { speed: 1, brightness: 1, intensity: 1, density: 1, quality: 'balanced', fps: 30, crt: 'off', showGary: true, autoHide: true },
-    clock: { show: true, date: false, h24: true, pos: 'tr', size: 1, opacity: 0.85 },
+    display: { speed: 1, brightness: 1, intensity: 1, density: 1, quality: 'balanced', fps: 30, crt: 'subtle', retro: false, showGary: true, autoHide: true },
+    clock: { show: true, date: false, h24: true, pos: 'tc', size: 1, opacity: 0.95 },
     audio: { enabled: false, master: 0.6, sceneAmbience: true, sceneLevel: 0.7, mix: {} },
     afk: { enabled: false, delay: 5, target: 'current', exitOnInput: true },
     focus: { work: 25, short: 5, long: 15, rounds: 4, notify: false, chime: true },
@@ -153,6 +154,7 @@ export function sanitize(input: unknown, validScene: (id: string) => boolean, sa
       quality: oneOf(disp.quality, ['low', 'balanced', 'high'] as const, d.display.quality),
       fps: oneOf(disp.fps, [15, 30, 60] as const, d.display.fps),
       crt: oneOf(disp.crt, ['off', 'subtle', 'strong'] as const, d.display.crt),
+      retro: bool(disp.retro, d.display.retro),
       showGary: bool(disp.showGary, d.display.showGary),
       autoHide: bool(disp.autoHide, d.display.autoHide),
     },
@@ -160,7 +162,7 @@ export function sanitize(input: unknown, validScene: (id: string) => boolean, sa
       show: bool(clk.show, d.clock.show),
       date: bool(clk.date, d.clock.date),
       h24: bool(clk.h24, d.clock.h24),
-      pos: oneOf(clk.pos, ['tl', 'tr', 'bl', 'br', 'center'] as const, d.clock.pos),
+      pos: oneOf(clk.pos, ['tc', 'tl', 'tr', 'bl', 'br', 'center'] as const, d.clock.pos),
       size: num(clk.size, d.clock.size, 0.5, 3),
       opacity: num(clk.opacity, d.clock.opacity, 0.1, 1),
     },

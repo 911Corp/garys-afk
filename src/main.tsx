@@ -1,7 +1,7 @@
 // Latin subsets only: they are precached for offline use, so every byte counts.
 import '@fontsource/vt323/latin-400.css'
-import '@fontsource/press-start-2p/latin-400.css'
 import '@fontsource/ibm-plex-mono/latin-400.css'
+import '@fontsource/ibm-plex-mono/latin-500.css'
 import './styles/app.css'
 import { createRoot } from 'react-dom/client'
 import { App } from './app/App'

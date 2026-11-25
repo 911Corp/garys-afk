@@ -1,19 +1,10 @@
-import { Boil, Drawing, VT } from '../../engine/gary/draw'
-import { box, canonicalScreen, chair, desk, deskGary, keyboard, ln, monitor, seed, SCREEN, type DeskPose } from '../../engine/gary/kit'
+import { PALETTES as PX } from '../../engine/pixel'
 import type { SceneContext } from '../../engine/types'
-import { GaryScene } from './garyBase'
+import { WorldScene } from './world'
 
-/** Everything here is made up: fictional tickers, a random walk, no real market data. */
-type Regime = 'pump' | 'crab' | 'chop' | 'dump' | 'rug'
-const POSE: Record<Regime, DeskPose> = { pump: 0, crab: 1, chop: 2, dump: 3, rug: 4 }
-const SAY: Record<Regime, string[]> = {
-  pump: ['wagmi', 'few understand', "we're so back", 'up only', 'LFG'],
-  crab: ['probably nothing', 'crab szn', 'mid', 'DYOR', 'NFA'],
-  chop: ['ser...', "who's the dev?", 'wen doxx?', 'trust me bro'],
-  dump: ['ngmi', "it's so over", 'bags heavy', 'cope'],
-  rug: ['RUGGED', 'SER NO', 'LP GONE', 'REKT'],
-}
-const TICKERS = ['$GARY', '$NGMI', '$COPE', '$HOPIUM', '$BAGS', '$WAGMI', '$SER', '$REKT', '$FOMO', '$PEPEGA2']
+/** Everything here is made up: fictional tickers, random walks, no real market data. */
+const TICKERS = ['$GARY', '$NGMI', '$COPE', '$HOPIUM', '$BAGS', '$WAGMI', '$SER', '$REKT', '$FOMO']
+const ALERTS = ['whale bought a lot', 'new ATH. screenshot it.', 'dev wallet moved', 'volume: asleep', 'support became resistance', 'liquidity pulled', 'funding flipped', 'someone said "early"']
 
 interface Candle {
   o: number
@@ -22,187 +13,266 @@ interface Candle {
   c: number
 }
 
-export function create(ctx: SceneContext) {
-  return new Trenches(ctx)
-}
-
-class Trenches extends GaryScene {
-  poses = new Map<DeskPose, Boil>()
-  setD: Drawing
-  frameD: Drawing
-  screens: Drawing[]
-  regime: Regime = 'crab'
-  regimeLeft = 8
+class Market {
   candles: Candle[] = []
   cur: Candle
-  candleAcc = 0
   price = 1
-  ticker = '$GARY'
-  shake = 0
-  constructor(ctx: SceneContext) {
-    super(ctx)
-    for (const p of [0, 1, 2, 3, 4] as DeskPose[]) this.poses.set(p, new Boil((v) => deskGary(p, v).ops))
-    seed(601)
-    this.setD = new Drawing([...chair(), ...desk(), ...monitor(), ...keyboard()])
-    seed(602)
-    this.frameD = new Drawing([...box(38, 58, 432, 290, 7), ...ln([[54, 312], [454, 311]], 3)])
-    this.screens = [0, 1, 2, 3, 4].map((l) => {
-      seed(700 + l)
-      return new Drawing(canonicalScreen(l))
-    })
+  drift = 0
+  vol = 0.5
+  left = 0
+  constructor(
+    private r: () => number,
+    public ticker: string,
+    n: number,
+  ) {
     this.cur = { o: 1, h: 1, l: 1, c: 1 }
-    for (let i = 0; i < 40; i++) {
-      this.walk(0.25)
-      this.closeCandle()
+    for (let i = 0; i < n; i++) {
+      this.walk(0.4)
+      this.close(n)
     }
-  }
-  lines() {
-    return SAY[this.regime]
-  }
-  setRegime(r: Regime) {
-    this.regime = r
-    const chaos = this.num('chaos')
-    this.regimeLeft = (r === 'rug' ? 5 : this.r.range(7, 15)) / chaos
-    if (this.garyOn && this.bool('bubbles')) this.say(this.r.pick(SAY[r]), 3.5)
-    this.nextBubble = this.r.range(6, 10)
-    if (r === 'rug') {
-      this.price *= 0.08
-      this.cur.c = this.price
-      this.cur.l = Math.min(this.cur.l, this.price)
-      this.shake = this.g.reducedMotion ? 0 : 0.6
-    }
-  }
-  nextRegime() {
-    const from = this.regime
-    if (from === 'rug') {
-      // a new token launches on the ashes of the old one
-      this.ticker = this.r.pick(TICKERS)
-      this.price = 1
-      this.candles = []
-      this.cur = { o: 1, h: 1, l: 1, c: 1 }
-      for (let i = 0; i < 12; i++) {
-        this.walk(0.15)
-        this.closeCandle()
-      }
-        return this.setRegime('crab')
-    }
-    const opts: Regime[] = from === 'pump' ? ['crab', 'chop', 'dump', 'pump'] : from === 'dump' ? ['crab', 'chop', 'rug', 'pump'] : ['pump', 'dump', 'chop', 'crab']
-    this.setRegime(this.r.pick(opts))
   }
   walk(dt: number) {
-    const drift = { pump: 0.9, crab: 0, chop: 0, dump: -0.6, rug: -0.05 }[this.regime]
-    const vol = { pump: 0.6, crab: 0.12, chop: 0.9, dump: 0.5, rug: 0.2 }[this.regime]
+    this.left -= dt
+    if (this.left <= 0) {
+      this.drift = (this.r() - 0.5) * 1.6
+      this.vol = 0.2 + this.r() * 0.9
+      this.left = 3 + this.r() * 8
+    }
     const z = (this.r() + this.r() + this.r() - 1.5) * 2
-    this.price *= Math.exp((drift * 0.06 + vol * 0.06 * z) * dt * 4)
-    this.price = Math.max(0.0005, this.price)
+    this.price = Math.max(0.0001, this.price * Math.exp((this.drift * 0.05 + this.vol * 0.07 * z) * dt * 3))
     this.cur.c = this.price
     this.cur.h = Math.max(this.cur.h, this.price)
     this.cur.l = Math.min(this.cur.l, this.price)
   }
-  closeCandle() {
+  close(max: number) {
     this.candles.push(this.cur)
-    if (this.candles.length > 48) this.candles.shift()
+    if (this.candles.length > max) this.candles.shift()
     this.cur = { o: this.price, h: this.price, l: this.price, c: this.price }
   }
-  step(dt: number) {
-    for (const b of this.poses.values()) b.step(dt, this.boilOn)
-    this.tickBubble(dt)
-    this.regimeLeft -= dt
-    if (this.regimeLeft <= 0) this.nextRegime()
-    this.walk(dt)
-    this.candleAcc += dt * this.num('chaos')
-    if (this.candleAcc > 0.7) {
-      this.candleAcc = 0
-      this.closeCandle()
-    }
-    this.shake = Math.max(0, this.shake - dt)
+}
+
+export function create(ctx: SceneContext) {
+  return new Trenches(ctx)
+}
+
+/** An empty trading desk at night: three monitors of simulated markets glowing in a dark room. */
+class Trenches extends WorldScene {
+  main: Market
+  side: Market
+  book: number[] = []
+  acc = 0
+  alerts: { text: string; a: number; up: boolean }[] = []
+  alertAcc = 2
+  steam: { x: number; y: number; a: number }[] = []
+  tape = 0
+  tapeText = ''
+  constructor(ctx: SceneContext) {
+    super(ctx)
+    this.main = new Market(this.r, this.r.pick(TICKERS), 46)
+    this.side = new Market(this.r, this.r.pick(TICKERS), 60)
+    this.book = Array.from({ length: 14 }, () => this.r())
+    this.tapeText = TICKERS.map((t) => `${t} ${this.r.chance(0.5) ? '▲' : '▼'}${this.r.range(0.1, 42).toFixed(1)}%`).join('   ')
   }
-  draw() {
+  palette() {
+    return PX.night16
+  }
+  step(dt: number) {
+    const chaos = this.num('chaos')
+    this.main.walk(dt * chaos)
+    this.side.walk(dt * chaos * 1.4)
+    this.acc += dt * chaos
+    if (this.acc > 0.8) {
+      this.acc = 0
+      this.main.close(46)
+      this.side.close(60)
+      this.book = this.book.map((v) => Math.max(0.05, Math.min(1, v + (this.r() - 0.5) * 0.4)))
+    }
+    if (this.bool('alerts')) {
+      this.alertAcc -= dt * chaos
+      if (this.alertAcc <= 0) {
+        this.alertAcc = this.r.range(3, 7)
+        this.alerts.unshift({ text: this.r.pick(ALERTS), a: 0, up: this.r.chance(0.5) })
+        if (this.alerts.length > 4) this.alerts.pop()
+      }
+    }
+    for (const a of this.alerts) a.a += dt
+    if (this.r.chance(dt * 2)) this.steam.push({ x: 742 + this.r.range(-5, 5), y: 404, a: 0 })
+    for (const s of this.steam) {
+      s.a += dt
+      s.y -= dt * 16
+      s.x += Math.sin(s.a * 3 + s.y * 0.1) * dt * 6
+    }
+    this.steam = this.steam.filter((s) => s.a < 2.4)
+    this.tape += dt * 40
+  }
+  chart(m: Market, x: number, y: number, w: number, h: number, big: boolean) {
     const c = this.c
-    const ink = this.pal.ink
-    this.begin()
-    if (this.shake > 0) c.translate(Math.sin(this.t * 80) * this.shake * 10, Math.cos(this.t * 67) * this.shake * 6)
-    this.frameD.draw(c, ink)
-    // big chart
-    const all = [...this.candles, this.cur]
+    const all = [...m.candles, m.cur]
     let lo = Infinity
     let hi = -Infinity
     for (const k of all) {
       lo = Math.min(lo, k.l)
       hi = Math.max(hi, k.h)
     }
-    const pad = (hi - lo) * 0.1 || 0.01
+    const pad = (hi - lo) * 0.12 || 0.01
     lo -= pad
     hi += pad
-    const X0 = 56
-    const X1 = 452
-    const Y0 = 96
-    const Y1 = 300
-    const y = (p: number) => Y1 - ((p - lo) / (hi - lo)) * (Y1 - Y0)
-    const cw = (X1 - X0) / 49
-    c.strokeStyle = ink
-    c.fillStyle = ink
+    const Y = (p: number) => y + h - ((p - lo) / (hi - lo)) * h
+    c.strokeStyle = 'rgba(120,160,220,0.08)'
+    c.lineWidth = 1
+    for (let i = 1; i < 5; i++) {
+      c.beginPath()
+      c.moveTo(x, y + (h * i) / 5)
+      c.lineTo(x + w, y + (h * i) / 5)
+      c.stroke()
+    }
+    const cw = w / all.length
     all.forEach((k, i) => {
-      const x = X0 + i * cw + cw / 2
-      c.lineWidth = 2
+      const cx = x + i * cw + cw / 2
+      const col = k.c >= k.o ? '#3ddc84' : '#ff5c6c'
+      c.strokeStyle = col
+      c.fillStyle = col
+      c.lineWidth = Math.max(1, cw * 0.12)
       c.beginPath()
-      c.moveTo(x, y(k.h))
-      c.lineTo(x, y(k.l))
+      c.moveTo(cx, Y(k.h))
+      c.lineTo(cx, Y(k.l))
       c.stroke()
-      const top = y(Math.max(k.o, k.c))
-      const bh = Math.max(2, Math.abs(y(k.o) - y(k.c)))
-      if (k.c >= k.o) {
-        c.fillStyle = this.pal.bg
-        c.fillRect(x - cw * 0.32, top, cw * 0.64, bh)
-        c.strokeRect(x - cw * 0.32, top, cw * 0.64, bh)
-        c.fillStyle = ink
-      } else c.fillRect(x - cw * 0.32, top, cw * 0.64, bh)
+      c.fillRect(cx - cw * 0.32, Y(Math.max(k.o, k.c)), cw * 0.64, Math.max(1.5, Math.abs(Y(k.o) - Y(k.c))))
     })
-    c.font = `28px ${VT}`
+    const py = Y(m.price)
+    c.setLineDash([4, 4])
+    c.strokeStyle = 'rgba(220,230,255,0.35)'
+    c.beginPath()
+    c.moveTo(x, py)
+    c.lineTo(x + w, py)
+    c.stroke()
+    c.setLineDash([])
+    c.font = `${big ? 15 : 12}px "IBM Plex Mono", monospace`
+    c.fillStyle = '#e6ecf6'
     c.textAlign = 'left'
-    c.fillText(`${this.ticker}/USD  ${this.price < 0.01 ? this.price.toExponential(2) : this.price.toFixed(3)}`, 56, 86)
+    const first = all[0].o
+    const ch = (m.price / first - 1) * 100
+    c.fillText(big ? `${m.ticker}/USD` : m.ticker, x, y - 10)
+    c.fillStyle = ch >= 0 ? '#3ddc84' : '#ff5c6c'
     c.textAlign = 'right'
-    c.fillText(this.regime === 'rug' ? 'RUGGED' : this.regime.toUpperCase(), 452, 86)
-    c.font = `22px ${VT}`
+    const pct = `${ch >= 0 ? '+' : ''}${ch.toFixed(1)}%`
+    c.fillText(big ? `${m.price < 0.01 ? m.price.toExponential(2) : m.price.toFixed(3)}  ${pct}` : pct, x + w, y - 10)
+  }
+  monitor(x: number, y: number, w: number, h: number) {
+    const c = this.c
+    this.glow(x + w / 2, y + h / 2, w * 0.9, 'rgba(60,110,200,A)', 0.18 * this.g.intensity)
+    c.fillStyle = '#0b0d12'
+    this.rr(x - 8, y - 8, w + 16, h + 16, 8)
+    c.fill()
+    c.fillStyle = '#060a14'
+    this.rr(x, y, w, h, 3)
+    c.fill()
+  }
+  draw() {
+    const c = this.c
+    this.screen()
+    const bg = c.createLinearGradient(0, 0, 0, this.h)
+    bg.addColorStop(0, '#05070d')
+    bg.addColorStop(1, '#0b1020')
+    c.fillStyle = bg
+    c.fillRect(0, 0, this.w, this.h)
+    this.world()
+    // back window with the city at night
+    c.fillStyle = '#0a1226'
+    this.rr(60, 40, 840, 150, 6)
+    c.fill()
+    for (let i = 0; i < 60; i++) {
+      const x = 70 + ((i * 137) % 820)
+      const y = 150 - ((i * 53) % 90)
+      const on = Math.sin(this.t * 0.3 + i * 7) > -0.6
+      c.fillStyle = on ? (i % 3 ? 'rgba(255,207,106,0.55)' : 'rgba(106,149,212,0.5)') : 'rgba(40,60,100,0.4)'
+      c.fillRect(x, y, 3, 3)
+    }
+    c.fillStyle = '#0d1630'
+    for (let i = 0; i < 14; i++) c.fillRect(60 + i * 60, 170 - ((i * 37) % 40), 52, 20 + ((i * 37) % 40))
+    // desk
+    c.fillStyle = '#0e1220'
+    c.fillRect(-200, 430, 1360, 300)
+    c.fillStyle = '#1a2038'
+    c.fillRect(-200, 426, 1360, 6)
+    // three monitors
+    this.monitor(110, 230, 190, 150)
+    this.monitor(320, 200, 320, 200)
+    this.monitor(660, 230, 190, 150)
+    c.fillStyle = '#0b0d12'
+    c.fillRect(472, 408, 16, 22)
+    c.fillRect(198, 388, 12, 40)
+    c.fillRect(750, 388, 12, 40)
+    this.chart(this.main, 336, 232, 288, 150, true)
+    this.chart(this.side, 122, 262, 166, 104, false)
+    // order book
+    const bx = 672
+    c.font = '12px "IBM Plex Mono", monospace'
     c.textAlign = 'left'
-    c.fillText('simulated. not a real market.', 56, 336)
-
-    // desk + Gary, canonical units x3.6
-    this.enterCanon(470, 115, 3.6)
-    this.setD.draw(c, ink)
-    const lvl = POSE[this.regime] as number
-    if (this.regime === 'rug') this.screens[4].draw(c, ink)
-    else {
-      // live mini chart on Gary's monitor
-      const pts = all.slice(-24)
-      c.save()
+    c.fillStyle = '#8aa0c8'
+    c.fillText('ORDER BOOK', bx, 252)
+    this.book.forEach((v, i) => {
+      const y = 262 + i * 8
+      c.fillStyle = i < 7 ? 'rgba(255,92,108,0.55)' : 'rgba(61,220,132,0.55)'
+      c.fillRect(bx + 166 - v * 80, y, v * 80, 6)
+      c.fillStyle = 'rgba(200,210,230,0.35)'
+      c.fillRect(bx, y + 2, 40 + ((i * 13) % 20), 2)
+    })
+    // alerts in the corner of the main screen
+    this.alerts.forEach((a, i) => {
+      const alpha = Math.min(1, a.a * 3) * Math.max(0, 1 - Math.max(0, a.a - 6) / 1.5)
+      if (alpha <= 0) return
+      const y = 358 - i * 22
+      c.globalAlpha = alpha
+      c.fillStyle = 'rgba(10,16,32,0.92)'
+      this.rr(346, y, 200, 18, 4)
+      c.fill()
+      c.fillStyle = a.up ? '#3ddc84' : '#ff5c6c'
+      c.fillRect(352, y + 7, 4, 4)
+      c.fillStyle = '#dde6f5'
+      c.font = '11px "IBM Plex Mono", monospace'
+      c.textAlign = 'left'
+      c.fillText(a.text, 362, y + 13)
+      c.globalAlpha = 1
+    })
+    // keyboard, mouse, mug and its steam
+    c.fillStyle = '#151a2c'
+    this.rr(380, 448, 200, 34, 4)
+    c.fill()
+    c.fillStyle = 'rgba(100,140,230,0.25)'
+    for (let r = 0; r < 3; r++) for (let k = 0; k < 14; k++) c.fillRect(388 + k * 13.5, 454 + r * 9, 10, 6)
+    c.fillStyle = '#151a2c'
+    this.rr(610, 456, 22, 30, 10)
+    c.fill()
+    c.fillStyle = '#2a3150'
+    this.rr(726, 410, 32, 34, 4)
+    c.fill()
+    c.strokeStyle = '#2a3150'
+    c.lineWidth = 5
+    c.beginPath()
+    c.arc(760, 426, 8, -Math.PI / 2, Math.PI / 2)
+    c.stroke()
+    for (const s of this.steam) {
+      c.fillStyle = `rgba(200,210,235,${0.18 * (1 - s.a / 2.4)})`
       c.beginPath()
-      c.rect(SCREEN.x, SCREEN.y, SCREEN.w, SCREEN.h)
-      c.clip()
-      c.lineWidth = 2
-      c.lineJoin = 'round'
-      c.beginPath()
-      pts.forEach((k, i) => {
-        const px = SCREEN.x + 2 + (i / 23) * (SCREEN.w - 4)
-        const py = SCREEN.y + SCREEN.h - 3 - ((k.c - lo) / (hi - lo)) * (SCREEN.h - 6)
-        if (i) c.lineTo(px, py)
-        else c.moveTo(px, py)
-      })
-      c.stroke()
-      c.restore()
+      c.arc(s.x, s.y, 3 + s.a * 3, 0, Math.PI * 2)
+      c.fill()
     }
-    if (this.garyOn) {
-      const motion = lvl >= 3 && !this.g.reducedMotion ? Math.sin(this.t * 40) * 0.25 : Math.sin(this.t * 2.2) * 0.35
-      c.save()
-      c.translate(2.5 + (lvl >= 3 ? motion : 0), -1.6 + (lvl < 3 ? motion : 0))
-      this.poses.get(POSE[this.regime])!.draw(c, ink)
-      c.restore()
-    }
+    // ticker tape along the desk edge
+    c.save()
+    c.beginPath()
+    c.rect(0, 500, 960, 30)
+    c.clip()
+    c.font = '14px "IBM Plex Mono", monospace'
+    c.fillStyle = '#6f84b0'
+    c.textAlign = 'left'
+    const tw = c.measureText(this.tapeText + '   ').width
+    const off = this.tape % tw
+    for (let x = -off; x < 960; x += tw) c.fillText(this.tapeText, x, 520)
     c.restore()
-
-    // bubble above Gary's head (head centre in canonical units -> world)
-    const head = this.regime === 'pump' ? [32, 36] : this.regime === 'chop' ? [46, 39] : [37, 36]
-    this.drawBubble(470 + (head[0] + 6) * 3.6, 115 + (head[1] - 16) * 3.6, 30)
-    this.footer()
+    c.font = '11px "IBM Plex Mono", monospace'
+    c.fillStyle = 'rgba(140,160,200,0.6)'
+    c.textAlign = 'right'
+    c.fillText('simulated data. not financial advice.', 944, 496)
   }
 }

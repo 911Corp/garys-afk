@@ -53,13 +53,14 @@ class LavaLamp extends PixelScene {
 
 Rules of the house:
 
-- Draw in buffer pixels. `this.u` is one pixel of a 180-pixel screen; multiply sizes by it.
-- Round coordinates for crisp pixels. The palette reduction removes anti-aliasing colours anyway.
+- Draw in units: `this.u` is one pixel of a 180-pixel screen; multiply sizes by it. The same code
+  then works in smooth HD and in Retro pixels mode.
+- If your scene computes every pixel (noise, fractals, ray casting), set `heavy: true` in its meta.
 - Use `this.r` (seeded rng) instead of `Math.random()`, so thumbnails are reproducible.
 - Honour `this.g.reducedMotion` (calmer motion) and `this.g.noFlash` (no full-screen flashes).
 - Use `this.density` for element counts and `this.g.intensity` for optional glow.
-- Gary: only through `src/engine/gary/kit.ts` and `draw.ts`. Never draw a new stickman, and check
-  `this.g.showGary` if your scene declares `gary: true`.
+- Gary: the owner decided he appears only in Gary.exe. Do not add him to other scenes without asking.
+  If he is ever used again, only through `src/engine/gary/kit.ts` and `draw.ts`, never a new stickman.
 
 ## 2. The entry
 

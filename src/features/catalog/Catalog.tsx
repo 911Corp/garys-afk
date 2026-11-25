@@ -5,7 +5,7 @@ import { useStore } from '../../storage/store'
 
 export type Filter = CategoryId | 'all' | 'favorites' | 'recent'
 
-export const thumb = (id: string) => `${import.meta.env.BASE_URL}assets/thumbnails/${id}.png`
+export const thumb = (id: string) => `${import.meta.env.BASE_URL}assets/thumbnails/${id}.jpg`
 
 export function Catalog({ current, onPick, filter, setFilter }: { current: string; onPick: (id: string) => void; filter: Filter; setFilter: (f: Filter) => void }) {
   const favorites = useStore((s) => s.favorites)

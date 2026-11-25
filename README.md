@@ -13,11 +13,11 @@ Free. No account, no ads, no wallet, no tracking, no server. Everything stays in
 
 ## What's inside
 
-32 pixel-art scenes in 8 categories, each with its own renderer and settings:
+32 animated scenes in 8 categories, each with its own renderer and settings:
 
 | Category | Scenes |
 | --- | --- |
-| Gary's Universe | Gary.exe · Touch Grass · Burger Shift · The Trenches |
+| After Hours | Gary.exe · The Trenches · Night Diner · Lo-fi Room |
 | Terminal & Hacker | Terminal 404 · Digital Rain · Mainframe · Packet Flow |
 | Cozy & Relax | Fireplace · Rainy Night · Snow Cabin · Aquarium |
 | Space & Cosmos | Starfield · Black Hole · Solar System · Nebula |
@@ -26,8 +26,9 @@ Free. No account, no ads, no wallet, no tracking, no server. Everything stays in
 | Pixel Worlds | Neon City · Night Train · Medieval Village · Arcade Room |
 | Generative Art | Game of Life · Fractal Explorer · Flow Field · Kaleidoscope |
 
-Every scene is drawn into a small buffer (about 320×180) and reduced to a limited palette with
-ordered dithering, then shown with crisp, upscaled pixels.
+Scenes render sharp and smooth at your screen's resolution. Turn on **Retro pixels** in Display to
+get the 8/16-bit look instead: a ~320×180 buffer, limited palettes and ordered dithering. Gary
+appears in one scene only, Gary.exe, asleep at his desk.
 
 Also: favorites, recent scenes, search, shuffle, immersive fullscreen with auto-hiding controls,
 an optional clock and date, 14 synthesised ambiences you can mix, playlists with durations and

@@ -1,6 +1,6 @@
-# Test results
+# Test results (v1.1.0)
 
-Real results from 2026-11-25 09:10 UTC. Nothing here is estimated.
+Real results from 2026-11-25 09:56 UTC. Nothing here is estimated.
 
 Environment: headless Google Chrome (Playwright 1.65) on Linux, **software rendering** (no GPU),
 production build served by `vite preview` under `/garys-afk/`. Real devices and other browsers
@@ -13,64 +13,66 @@ were not tested: see `docs/limitations.md`.
 | Lint (oxlint) | 0 warnings, 0 errors |
 | Typecheck (tsc) | 0 errors |
 | Unit tests (Vitest) | 19 / 19 passed |
-| End-to-end (Playwright) | 92 / 92 passed |
+| End-to-end (Playwright) | 93 / 93 passed |
 
 Unit tests cover the Conway rule (blinker, block, glider across the wrapping edge, HighLife B6),
 the settings schema (garbage input, clamping, unknown ids, prototype pollution, v0 migration,
-import checks), the scene catalogue (32 scenes, 4 per category, thumbnails, valid defaults) and
-the palette reduction.
+import checks), the scene catalogue (32 scenes, 4 per category, thumbnails, valid defaults, Gary
+only in Gary.exe) and the palette reduction used by Retro pixels mode.
 
-## Every scene, landscape 1280x720 and portrait 390x844
+## Every scene, landscape 1280x720 and portrait 390x844 (smooth mode)
 
 Each scene was loaded alone, run for 2.5 s (landscape) or 1.2 s (portrait), checked for runtime
-errors and for a non-blank canvas. "Colours" counts distinct colours in a sample of the frame. FPS is
-the engine's own measurement, capped at 60, on software rendering.
+errors and for a non-blank canvas. "Buffer" is the canvas resolution (per-pixel scenes use a lower
+one). "Colours" counts distinct colours in a sparse sample of the frame. FPS is the engine's own
+measurement, capped at 60, on software rendering.
 
 | Scene | Landscape | Buffer | Colours | FPS | Portrait |
 | --- | --- | --- | --- | --- | --- |
-| gary-exe | pass | 480x270 | 5 | 60 | pass (270x584) |
-| touch-grass | pass | 480x270 | 4 | 60 | pass (270x584) |
-| burger-shift | pass | 480x270 | 5 | 60 | pass (270x584) |
-| the-trenches | pass | 480x270 | 4 | 60 | pass (270x584) |
-| terminal-404 | pass | 480x270 | 4 | 60 | pass (270x584) |
-| digital-rain | pass | 480x270 | 5 | 60 | pass (270x584) |
-| mainframe | pass | 320x180 | 16 | 60 | pass (180x390) |
-| packet-flow | pass | 400x225 | 10 | 60 | pass (225x487) |
-| fireplace | pass | 320x180 | 14 | 60 | pass (180x390) |
-| rainy-night | pass | 320x180 | 16 | 60 | pass (180x390) |
-| snow-cabin | pass | 320x180 | 15 | 60 | pass (180x390) |
-| aquarium | pass | 320x180 | 15 | 60 | pass (180x390) |
-| starfield | pass | 320x180 | 4 | 60 | pass (180x390) |
-| black-hole | pass | 320x180 | 12 | 60 | pass (180x390) |
-| solar-system | pass | 400x225 | 14 | 60 | pass (225x487) |
-| nebula | pass | 320x180 | 9 | 60 | pass (180x390) |
-| dvd-survivor | pass | 400x225 | 3 | 60 | pass (225x487) |
-| 3d-pipes | pass | 320x180 | 14 | 60 | pass (180x390) |
-| endless-maze | pass | 320x180 | 4 | 60 | pass (180x390) |
-| flying-floppies | pass | 320x180 | 14 | 60 | pass (180x390) |
-| ocean-waves | pass | 320x180 | 10 | 60 | pass (180x390) |
-| forest-life | pass | 320x180 | 9 | 60 | pass (180x390) |
-| northern-lights | pass | 320x180 | 11 | 60 | pass (180x390) |
-| thunderstorm | pass | 320x180 | 10 | 60 | pass (180x390) |
-| neon-city | pass | 320x180 | 15 | 60 | pass (180x390) |
-| night-train | pass | 320x180 | 15 | 60 | pass (180x390) |
-| medieval-village | pass | 320x180 | 15 | 60 | pass (180x390) |
-| arcade-room | pass | 400x225 | 16 | 60 | pass (225x487) |
-| game-of-life | pass | 320x180 | 6 | 60 | pass (180x390) |
-| fractal-explorer | pass | 288x162 | 8 | 60 | pass (162x351) |
-| flow-field | pass | 320x180 | 7 | 60 | pass (180x390) |
-| kaleidoscope | pass | 320x180 | 8 | 60 | pass (180x390) |
+| gary-exe | pass | 1280x720 | 1529 | 60 | pass (390x844) |
+| the-trenches | pass | 1280x720 | 2132 | 60 | pass (390x844) |
+| night-diner | pass | 1280x720 | 9643 | 60 | pass (390x844) |
+| lofi-room | pass | 1280x720 | 10334 | 60 | pass (390x844) |
+| terminal-404 | pass | 1280x720 | 1487 | 60 | pass (390x844) |
+| digital-rain | pass | 1280x720 | 1245 | 60 | pass (390x844) |
+| mainframe | pass | 1280x720 | 3362 | 60 | pass (390x844) |
+| packet-flow | pass | 1280x720 | 2760 | 60 | pass (390x844) |
+| fireplace | pass | 1280x720 | 228 | 60 | pass (390x844) |
+| rainy-night | pass | 1280x720 | 6186 | 60 | pass (390x844) |
+| snow-cabin | pass | 1280x720 | 5356 | 60 | pass (390x844) |
+| aquarium | pass | 1280x720 | 1653 | 60 | pass (390x844) |
+| starfield | pass | 1280x720 | 3610 | 60 | pass (390x844) |
+| black-hole | pass | 1280x720 | 538 | 60 | pass (390x844) |
+| solar-system | pass | 1280x720 | 962 | 60 | pass (390x844) |
+| nebula | pass | 533x300 | 3439 | 60 | pass (300x649) |
+| dvd-survivor | pass | 1280x720 | 229 | 60 | pass (390x844) |
+| 3d-pipes | pass | 1280x720 | 1434 | 60 | pass (390x844) |
+| endless-maze | pass | 533x300 | 3 | 60 | pass (300x649) |
+| flying-floppies | pass | 1280x720 | 14 | 60 | pass (390x844) |
+| ocean-waves | pass | 533x300 | 461 | 58 | pass (300x649) |
+| forest-life | pass | 1280x720 | 458 | 60 | pass (390x844) |
+| northern-lights | pass | 533x300 | 5643 | 60 | pass (300x649) |
+| thunderstorm | pass | 533x300 | 962 | 60 | pass (300x649) |
+| neon-city | pass | 1280x720 | 733 | 60 | pass (390x844) |
+| night-train | pass | 1280x720 | 1733 | 60 | pass (390x844) |
+| medieval-village | pass | 1280x720 | 1374 | 60 | pass (390x844) |
+| arcade-room | pass | 1280x720 | 13718 | 60 | pass (390x844) |
+| game-of-life | pass | 533x300 | 43 | 60 | pass (300x649) |
+| fractal-explorer | pass | 533x300 | 695 | 30 | pass (300x649) |
+| flow-field | pass | 1280x720 | 191 | 60 | pass (390x844) |
+| kaleidoscope | pass | 1280x720 | 4017 | 35 | pass (390x844) |
 
 ## App behaviour
 
 | Check | Result | Detail |
 | --- | --- | --- |
+| Retro pixels mode renders at low resolution | pass |  |
 | no-flash + reduced motion modes run | pass |  |
 | app loads under /garys-afk/ without errors | pass |  |
 | starts on Gary.exe | pass |  |
 | picking a card switches scene | pass |  |
 | category filter | pass |  |
-| search | pass | Digital Rain, Rainy Night, Thunderstorm, Night Train |
+| search | pass | Night Diner, Lo-fi Room, Digital Rain, Rainy Night, Thunderstorm, Night Train |
 | next scene (→) | pass | Rainy Night |
 | previous scene (←) | pass |  |
 | pause with Space | pass |  |
@@ -90,14 +92,12 @@ the engine's own measurement, capped at 60, on software rendering.
 | AFK mode exits on input | pass |  |
 | no runtime errors during the app session | pass |  |
 | works offline after first visit (service worker) | pass | GARY'S AFK_ / Kaleidoscope / thumbnails true |
-| 96 scene switches: one canvas left, heap stable | pass | heap 2.2 MB -> 5.1 MB, canvases 1 |
-| 2-minute run of one scene: heap stable | pass | heap 5.7 MB -> 5.9 MB, fps samples 60,60,60,60,60,60,60,60,60,60,60,60 |
+| 96 scene switches: one canvas left, heap stable | pass | heap 2.2 MB -> 4.7 MB, canvases 1 |
+| 2-minute run of one scene: heap stable | pass | heap 5.6 MB -> 5.9 MB, fps samples 60,60,60,60,60,60,60,60,60,60,60,60 |
 
-Memory is measured after a forced garbage collection through the DevTools protocol. Separate
-2-minute checks with the same method: Fireplace 3.5 to 3.7 MB, Gary.exe 3.4 to 3.5 MB, Nebula 3.6
-to 4.5 MB, Rainy Night 3.4 to 3.8 MB (stable, no growth trend).
+Memory is measured after a forced garbage collection through the DevTools protocol.
 
-## Bugs found by these tests and fixed
+## Bugs found by the tests and fixed (v1.0.0)
 
 1. AFK mode never started while a playlist was running: the idle timer restarted at every scene change.
 2. The service worker failed to install: build placeholders were replaced in a comment, not in the code.

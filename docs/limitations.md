@@ -33,8 +33,8 @@ Written from what was actually built and tested on 2026-11-25. Anything not list
 - Jarvis has no official visual, so he appears as text only (the log on Gary's monitor, the voice in
   Terminal 404). Add his design to `src/engine/gary/` when it exists.
 - "Flying Toasters" ships as **Flying Floppies**, with original sprites.
-- The Trenches is LCD monochrome like every Gary scene, not red/green as in the first catalogue
-  notes, because the Gary scenes follow the Purity-o-Meter look and were asked to stay minimal.
+- Gary appears only in Gary.exe (asleep, no speech bubbles), at the owner's request. The canonical
+  poses and the speech bubble remain in `src/engine/gary/` for future use.
 - Fractal Explorer zooms until double precision runs out (about 10^11), then pulls back and picks
   another point. Deeper zooms would need arbitrary precision.
 - Black Hole is an artistic rendering, not a physical simulation.
@@ -44,6 +44,7 @@ Written from what was actually built and tested on 2026-11-25. Anything not list
 ## Performance notes
 
 - Heaviest scenes on the CPU: Fractal Explorer, Nebula, Ocean Waves, Northern Lights (per-pixel
-  work). On slow devices use "Pixel size: Chunky", a 30 or 15 FPS cap, or Power saver.
+  work). They render at a lower internal resolution, so they look softer than the vector scenes.
+  On slow devices use Graphics quality "Low", a 30 or 15 FPS cap, or Power saver.
 - Frame rates in `docs/test-results.md` come from software rendering in a headless browser; real
   hardware should do better, but this has not been measured.

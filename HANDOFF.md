@@ -1,16 +1,18 @@
-# HANDOFF: Gary's AFK v1.0.0
+# HANDOFF: Gary's AFK v1.1.0
 
-For the next agent or developer. Date: 2026-11-25. State: complete V1.0, tested in headless
-Chrome, **not deployed**. Preview: published as a private Claude artifact ("Gary's AFK").
+For the next agent or developer. Date: 2026-11-25. State: v1.1.0, tested in headless Chrome.
+**Live on GitHub Pages**: https://911corp.github.io/garys-afk/ (repo `911Corp/garys-afk`, branch
+`main`). v1.0.0 was deployed first; v1.1.0 is the redesign below.
 
 ## Decisions taken (with the owner, in this session)
 
-1. **True retro app, pixel art 8/16-bit.** The first approach (smooth gradients, detailed
-   illustrations) was rejected as too complex. Every scene now renders into a ~320×180 buffer,
-   is reduced to a 4 to 16 colour palette with ordered dithering, then upscaled with crisp pixels.
+1. **v1.1 visual direction = the owner's reference screens** (the earlier prototype's look): IBM
+   Plex Mono, rounded thin frames, mint accent, big centred clock, smooth sharp scenes. The v1.0
+   pixel-art rendering stays as the optional "Retro pixels" display setting.
 2. **All 32 scenes kept**, 4 per category, each with its own renderer and real settings.
-3. **Gary scenes are minimal** ("épurées"): Gary, his desk or a minimal set, one or two moving
-   things. No clutter.
+3. **Gary appears in one scene only: Gary.exe, asleep, no speech bubbles** (the owner found the
+   Gary scenes and bubbles unreadable). Touch Grass and Burger Shift were removed; The Trenches
+   lost Gary; Night Diner and Lo-fi Room were added; the category is now **After Hours**.
 4. **Layout = the validated prototype screens**: one page, header "GARY'S AFK_ / even degens need
    a break.", player with clock and scene name, `‹ Shuffle Favorite ›`, category chips, thumbnail
    grid, collapsible panels. On wide screens the catalogue sits beside the player.
@@ -23,14 +25,13 @@ Chrome, **not deployed**. Preview: published as a private Claude artifact ("Gary
    applied: green phosphor by default in Terminal 404, NGMI logo by default in DVD Survivor,
    Medieval Village at dusk by default.
 8. **"Flying Toasters" renamed "Flying Floppies"**, original sprites, as the brief allowed.
-9. **The Trenches** stays LCD monochrome (Gary scene rules) instead of red/green charts.
+9. **The Trenches** is now an empty desk with red/green simulated charts, as the catalogue notes said.
 10. **Sound is 100% synthesised** (Web Audio): no audio files, nothing to license, no loop seams.
 11. **No automatic deployment**: the Pages workflow is manual (`workflow_dispatch`).
 
 ## Decisions left to the owner
 
-- Approve going public, then create `911Corp/garys-afk` and run the deploy workflow
-  (`docs/deployment.md`).
+- Approve each new public release: the deploy workflow is manual (`docs/deployment.md`).
 - Confirm the MIT licence for the code (the Gary identity is excluded in `LICENSE`).
 - Listen to the 14 ambiences on real speakers and adjust levels or drop any.
 - Provide a Jarvis design if one should appear visually.
@@ -40,7 +41,8 @@ Chrome, **not deployed**. Preview: published as a private Claude artifact ("Gary
 
 | Path | What |
 | --- | --- |
-| `src/engine/gary/kit.ts` | Gary's canonical drawing code and all his poses. Read before touching Gary. |
+| `src/engine/gary/kit.ts` | Gary's canonical drawing code and all his poses (only the sleeping one is used). Read before touching Gary. |
+| `src/scenes/gary/world.ts` | 960×540 world base for the illustrated After Hours scenes |
 | `src/engine/gary/draw.ts` | Path2D renderer, LCD palettes, canonical speech bubble |
 | `src/engine/types.ts` | The scene contract |
 | `src/engine/stage.ts` | Canvas, loop, FPS cap, pixel buffer size, pause, disposal |
@@ -60,6 +62,7 @@ Chrome, **not deployed**. Preview: published as a private Claude artifact ("Gary
 | --- | --- |
 | 32 scenes, per-scene settings, reset/restart | done, tested |
 | Catalogue: categories, search, favorites, recent, shuffle, prev/next, thumbnails | done, tested |
+| Smooth HD rendering + optional Retro pixels mode | done, tested (both modes) |
 | Player: pause, immersive, fullscreen API + fallback, auto-hide, double-tap | done, tested (fallback path on iOS not tested on a device) |
 | Display: speed, brightness, intensity, density, pixel size, FPS cap, CRT, show Gary | done; FPS and pixel size verified, others visually spot-checked |
 | Clock/date, 12/24 h, position, size, opacity | done, visually checked |
@@ -86,5 +89,5 @@ service worker placeholders, offline `Vary` mismatch).
 ## Next steps that would help most
 
 1. Real-device pass (iPhone, Android, Safari, Firefox) and a sound listening pass.
-2. Deploy after approval; check `https://911corp.github.io/garys-afk/` offline after one visit.
+2. After any change: `npm run build && npm run test:e2e`, then run the Pages workflow by hand.
 3. Optional: a gentle pixel drift of whole Gary scenes for OLED screens; a Jarvis sprite once designed.

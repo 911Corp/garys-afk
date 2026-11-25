@@ -12,7 +12,7 @@ export const retroScenes: SceneEntry[] = [
       pixelScale: 1.25,
       complexity: 1,
       audio: ['white'],
-      gary: true,
+      gary: false,
       tags: ['bounce', 'logo', 'corner', 'classic'],
     },
     settings: [
@@ -23,7 +23,6 @@ export const retroScenes: SceneEntry[] = [
         options: [
           { value: 'afk', label: "Gary's AFK" },
           { value: 'ngmi', label: 'NGMI' },
-          { value: 'gary', label: "Gary's head" },
         ],
         default: 'ngmi',
       },
@@ -67,6 +66,7 @@ export const retroScenes: SceneEntry[] = [
   {
     meta: {
       id: 'endless-maze',
+      heavy: true,
       name: 'Endless Maze',
       category: 'retro',
       description: 'A ray-cast walk through generated mazes, following the right-hand wall, one maze after another.',

@@ -5,13 +5,12 @@ import { GaryScene } from './garyBase'
 
 /** Kept short: the monitor only fits about 14 characters per line at this size. */
 const LOG = ['gary is afk', 'build ok', 'tests 41/42', 'fixed #42.', 'lint: clean', 'backup done', 'docs updated', 'cache warm', 'deploy? no.', 'waiting.', 'rebasing...', 'all good']
-const ZZZ = ['zzz... up only...', 'zzz... one more commit...', 'zzz... wen moon...', 'zzz... ship it...', 'zzz... gm...']
 
 export function create(ctx: SceneContext) {
   return new GaryExe(ctx)
 }
 
-/** Gary asleep at his desk at night. Jarvis keeps typing on the screen. Nothing else. */
+/** Gary asleep at his desk at night. Jarvis keeps typing on the screen. No speech bubbles. */
 class GaryExe extends GaryScene {
   windowD: Drawing
   setD: Drawing
@@ -30,14 +29,9 @@ class GaryExe extends GaryScene {
     seed(98)
     this.chairD = new Drawing(chair())
     for (let i = 0; i < 4; i++) this.log.push(this.r.pick(LOG))
-    this.nextBubble = 5
-  }
-  lines() {
-    return ZZZ
   }
   step(dt: number) {
     this.gary.step(dt, this.boilOn)
-    this.tickBubble(dt)
     this.logAcc += dt * this.num('jarvis')
     if (this.logAcc > 2.4) {
       this.logAcc = 0
@@ -70,7 +64,7 @@ class GaryExe extends GaryScene {
       g.addColorStop(1, this.pal.bg)
       c.globalAlpha = k
       c.fillStyle = g
-      c.fillRect(440, 40, 500, 330)
+      c.fillRect(0, 0, 960, 540)
       c.globalAlpha = 1
     }
     // window: moon crossing slowly, two stars blinking
@@ -126,6 +120,5 @@ class GaryExe extends GaryScene {
       c.font = `${Math.round(24 + z.a * 8)}px ${VT}`
       c.fillText(z.a < 1 ? 'z' : 'Z', 560 + z.x, 228 + z.y)
     }
-    this.drawBubble(536, 128, 30)
   }
 }

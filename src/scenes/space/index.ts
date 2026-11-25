@@ -33,11 +33,11 @@ export const spaceScenes: SceneEntry[] = [
         label: 'Tint',
         type: 'select',
         options: [
+          { value: 'blue', label: 'Deep blue' },
           { value: 'white', label: 'White' },
-          { value: 'blue', label: 'Blue' },
           { value: 'amber', label: 'Amber' },
         ],
-        default: 'white',
+        default: 'blue',
       },
     ],
     load: () => import('./starfield'),
@@ -97,6 +97,7 @@ export const spaceScenes: SceneEntry[] = [
   {
     meta: {
       id: 'nebula',
+      heavy: true,
       name: 'Nebula',
       category: 'space',
       description: 'Slowly shifting clouds of gas built from warped noise, with a scatter of stars.',

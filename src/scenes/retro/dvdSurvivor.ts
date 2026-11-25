@@ -1,6 +1,4 @@
 import { PixelScene } from '../../engine/base'
-import { Drawing } from '../../engine/gary/draw'
-import { head, face, seed } from '../../engine/gary/kit'
 import type { SceneContext } from '../../engine/types'
 
 const COLORS = ['#55ffff', '#ff55ff', '#ffff55', '#55ff55', '#ff5555', '#5555ff', '#ffffff', '#ffaa00']
@@ -19,13 +17,10 @@ class DvdSurvivor extends PixelScene {
   corners = 0
   bounces = 0
   party = 0
-  garyHead: Drawing
   lw = 60
   lh = 30
   constructor(ctx: SceneContext) {
     super(ctx)
-    seed(7 + 101) // the canonical Mid face
-    this.garyHead = new Drawing([...head(0, 0), ...face(1, 0, 0)])
     this.x = this.r.range(0, this.w * 0.5)
     this.y = this.r.range(0, this.h * 0.5)
     this.vx = this.r.chance(0.5) ? 1 : -1
@@ -41,8 +36,8 @@ class DvdSurvivor extends PixelScene {
   configure() {
     const s = this.num('size') * this.u
     const logo = this.str('logo')
-    this.lw = Math.round((logo === 'gary' ? 44 : logo === 'ngmi' ? 56 : 70) * s)
-    this.lh = Math.round((logo === 'gary' ? 40 : logo === 'ngmi' ? 28 : 40) * s)
+    this.lw = Math.round((logo === 'ngmi' ? 56 : 70) * s)
+    this.lh = Math.round((logo === 'ngmi' ? 28 : 40) * s)
   }
   step(dt: number) {
     const sp = this.num('speed') * 40 * this.u
@@ -89,13 +84,7 @@ class DvdSurvivor extends PixelScene {
     c.fillStyle = col
     c.textAlign = 'center'
     c.textBaseline = 'middle'
-    if (logo === 'gary') {
-      c.save()
-      c.translate(x + this.lw / 2 - 2 * s, y + this.lh / 2 + 2 * s)
-      c.scale(1.5 * s, 1.5 * s)
-      this.garyHead.draw(c, col)
-      c.restore()
-    } else if (logo === 'ngmi') {
+    if (logo === 'ngmi') {
       c.font = `${Math.round(26 * s)}px "VT323", monospace`
       c.fillText('NGMI', x + this.lw / 2, y + this.lh / 2)
       c.fillRect(x, y + this.lh - 2 * s, this.lw, Math.max(1, Math.round(s)))
