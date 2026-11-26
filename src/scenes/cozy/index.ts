@@ -178,7 +178,7 @@ export const cozyScenes: SceneEntry[] = [
       id: 'bonsai-seasons',
       name: 'Bonsai',
       category: 'cozy',
-      description: 'An evergreen bonsai in informal upright style on a display stand: a tapering trunk with surface roots, alternating branches, layered foliage pads in a scalene triangle, a shallow pot and a small accent plant.',
+      description: 'A pixel-art evergreen bonsai in informal upright style on a display stand: a tapering trunk with surface roots, alternating branches, layered foliage pads in a scalene triangle, a shallow pot and a small accent plant.',
       version: '1.4.1',
       render: 'pixel',
       complexity: 1,

@@ -3,10 +3,10 @@
 ## 1.4.1 (2026-11-26)
 
 ### Changed
-- **Bonsai** (was Bonsai Seasons) redrawn as a green evergreen in informal upright style, built to
-  the classic rules: a trunk that tapers and whose curves shrink with height, surface roots, the
+- **Bonsai** (was Bonsai Seasons) redrawn in hand-built pixel art: a green evergreen in informal
+  upright style, built to the classic rules: a trunk that tapers and whose curves shrink with height, surface roots, the
   first branch at a third of the height, alternating branches (one at the back), foliage pads with
-  flat undersides forming a scalene triangle, the tree off-centre in a shallow pot, on a stand with
+  flat undersides and scalloped, cloud-like tops forming a scalene triangle, the tree off-centre in a shallow pot, on a stand with
   an accent plant. New settings: light (morning, midday, evening) and breeze.
 
 ## 1.4.0 (2026-11-26)
