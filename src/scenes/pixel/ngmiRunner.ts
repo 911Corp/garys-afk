@@ -201,7 +201,7 @@ class NgmiRunner extends PixelScene {
     c.textAlign = 'left'
     c.fillStyle = MIDINK
     font(c, 7 * s, VT)
-    c.fillText(VW > 210 ? 'GARY\u2019S ADVENTURES: NGMI  //  DEMO' : 'NGMI  //  DEMO', X(8), Y(top))
+    c.fillText(VW > 210 ? 'GARY\u2019S ADVENTURES: NGMI  //  DEMO' : 'NGMI  //  DEMO', X(8), Y(top - 11))
     if (this.dead) {
       c.textAlign = 'center'
       font(c, 16 * s, VT)

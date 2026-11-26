@@ -172,7 +172,7 @@ export const retroScenes: SceneEntry[] = [
     settings: [
       { key: 'text', label: 'Text', type: 'select', options: [{ value: 'NGMI', label: 'NGMI' }, { value: 'WAGMI', label: 'WAGMI' }, { value: 'GM', label: 'GM' }, { value: 'AFK', label: 'AFK' }, { value: 'WEN MOON', label: 'WEN MOON' }], default: 'NGMI' },
       { key: 'style', label: 'Material', type: 'select', options: [{ value: 'chrome', label: 'Chrome' }, { value: 'gold', label: 'Gold' }, { value: 'neon', label: 'Neon' }], default: 'chrome' },
-      { key: 'motion', label: 'Motion', type: 'select', options: [{ value: 'spin', label: 'Spin' }, { value: 'seesaw', label: 'See-saw' }, { value: 'wobble', label: 'Wobble' }], default: 'spin' },
+      { key: 'motion', label: 'Motion', type: 'select', options: [{ value: 'spin', label: 'Spin' }, { value: 'seesaw', label: 'See-saw' }, { value: 'wobble', label: 'Wobble' }], default: 'seesaw' },
       { key: 'speed', label: 'Speed', type: 'range', min: 0.2, max: 3, step: 0.1, default: 1 },
     ],
     load: () => import('./text3d'),

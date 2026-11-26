@@ -9,6 +9,14 @@
   flat undersides and scalloped, cloud-like tops forming a scalene triangle, the tree off-centre in a shallow pot, on a stand with
   an accent plant. New settings: light (morning, midday, evening) and breeze.
 
+### Fixed
+- **Watchmaker**: the gear train is laid out compactly, then fitted and centred inside the plate
+  (no wheel spills over the edge any more); the balance wheel sits next to the escape wheel and the
+  bridge follows the plate.
+- **NGMI Runner**: the title line no longer overlaps the high score in landscape.
+- **3D Text**: the default motion is now see-saw, so words are never shown mirrored from behind
+  (spin is still available).
+
 ## 1.4.0 (2026-11-26)
 
 ### Art direction

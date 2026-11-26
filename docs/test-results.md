@@ -1,6 +1,6 @@
-# Test results (v1.4.0)
+# Test results (v1.4.1)
 
-Real results from 2026-11-25 23:34 UTC. Nothing here is estimated.
+Real results from 2026-11-26 05:57 UTC. Nothing here is estimated.
 
 Environment: headless Google Chrome (Playwright) on Linux, **software rendering** (no GPU),
 production build served by `vite preview` under `/garys-afk/`. Real devices and other browsers
